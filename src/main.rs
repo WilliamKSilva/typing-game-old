@@ -1,5 +1,5 @@
 use tokio::net::{TcpListener, TcpStream};
-use std::io;
+use tokio::io::{self, AsyncWriteExt, BufWriter};
 
 #[tokio::main]
 async fn main() {
@@ -17,18 +17,17 @@ async fn main() {
     }
 }
 
-async fn process(stream: TcpStream) {
-    let mut buff: Vec<u8> = vec![0; 1024];
+async fn process(mut stream: TcpStream) {
     let _ = stream.readable().await;
+    let mut buff_reader = vec![0; 1024];
+
+    stream.try_read(&mut buff_reader).unwrap();
     
-    match stream.try_read(&mut buff) {
-        Ok(_n) => println!("fuck yeah"),
-        Err(_) => panic!("fuck")
-    };
-
-    println!("{:?}", buff);
-
-    let data = String::from_utf8(buff);
+    let data = String::from_utf8(buff_reader).unwrap(); 
 
     println!("{:?}", data);
+
+    let response = format!("asiudhiasuhdiuashdua");
+
+    let _ = stream.write_all(response.as_bytes()).await.unwrap();
 }
