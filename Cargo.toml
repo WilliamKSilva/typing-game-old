@@ -8,4 +8,6 @@ edition = "2021"
 [dependencies]
 http = "0.2.9"
 httparse = "1.8.0"
+serde = {version = "1.0.188", features = ["derive"]}
+serde_json = "1.0.107"
 tokio = { version = "1", features = ["full"] }
