@@ -1,5 +1,6 @@
 use tokio::net::{TcpListener, TcpStream};
 use tokio::io::{AsyncWriteExt};
+use httparse;
 
 #[tokio::main]
 async fn main() {
@@ -13,21 +14,23 @@ async fn main() {
             Err(_) => panic!("aaaaaaaaaaa")
         }; 
 
-        process(tcp_stream).await;
+        process_http(tcp_stream).await;
     }
 }
 
-async fn process(mut stream: TcpStream) {
+async fn process_http(mut stream: TcpStream) {
+    let mut headers = [httparse::EMPTY_HEADER; 64];
+    let mut req = httparse::Request::new(&mut headers);
+
     let _ = stream.readable().await;
     let mut buff_reader = vec![0; 1024];
 
     stream.try_read(&mut buff_reader).unwrap();
+
+    println!("{:?}", String::from_utf8(buff_reader.clone()));
     
-    let data = String::from_utf8(buff_reader).unwrap(); 
+    assert!(req.parse(&buff_reader).unwrap().is_complete());
 
-    println!("{:?}", data);
-
-    let response = format!("asiudhiasuhdiuashdua");
 
     let _ = stream.write_all(response.as_bytes()).await.unwrap();
 }
