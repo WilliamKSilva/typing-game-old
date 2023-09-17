@@ -1,4 +1,5 @@
 use serde::Deserialize;
+use serde::de::DeserializeOwned;
 use serde_json;
 use tokio::net::{TcpListener, TcpStream};
 use tokio::io::{AsyncWriteExt};
@@ -50,6 +51,12 @@ fn get_body(buff: String, body: &mut String) {
     }
 }
 
+fn parse_json<T: DeserializeOwned>(buff: String) -> T {
+    let data: T = serde_json::from_str(&buff).unwrap();
+
+    return data;
+}
+
 async fn process_http(stream: TcpStream) {
     let mut headers = [httparse::EMPTY_HEADER; 64];
     let mut req = httparse::Request::new(&mut headers);
@@ -63,10 +70,14 @@ async fn process_http(stream: TcpStream) {
     get_body(String::from_utf8(buff_reader.clone()).unwrap(), &mut body);
 
     println!("{:?}", body);
+
+    let message: Message = parse_json(body);
+
+    println!("{:?}", message.name);
     
     // assert!(req.parse(&buff_reader).unwrap().is_complete());
 
-    let response = format!("asiudhiasuhdiuashdua");
+    // let response = format!("asiudhiasuhdiuashdua");
 
     // let _ = stream.write_all(response.as_bytes()).await.unwrap();
 }
