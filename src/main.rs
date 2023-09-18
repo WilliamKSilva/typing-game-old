@@ -1,6 +1,7 @@
 use tokio::net::TcpListener;
 
 mod http;
+mod game;
 
 #[tokio::main]
 async fn main() {
@@ -9,11 +10,14 @@ async fn main() {
     println!("Listening on port: 3333");
 
     loop {
-        let (tcp_stream, _) = match listener.accept().await {
+        let (mut tcp_stream, _) = match listener.accept().await {
             Ok(data) => data,
             Err(_) => panic!("aaaaaaaaaaa")
         }; 
 
-        http::http_request(tcp_stream).await;
+        let request = match http::http_request(&mut tcp_stream).await {
+            Some(req) => req,
+            None => return http::close_stream(http::build_bad_response(), &mut tcp_stream).await
+        };
     }
 }

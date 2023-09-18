@@ -4,12 +4,17 @@ use serde::Deserialize;
 use serde_json::{self, json};
 
 #[derive(Deserialize, Debug)]
-struct Message {
+pub struct Message {
     room: String,
     name: String,
 }
 
-pub async fn http_request(mut stream: TcpStream) {
+pub struct HttpRequest {
+    body: String,
+    method: String,
+}
+
+pub async fn http_request(stream: &mut TcpStream) -> Option<HttpRequest> {
     let mut headers = [httparse::EMPTY_HEADER; 64];
     let mut req = httparse::Request::new(&mut headers);
 
@@ -24,11 +29,11 @@ pub async fn http_request(mut stream: TcpStream) {
     match req.parse(&buff_reader) {
         Ok(bytes) => (),
         Err(_) => {
-            return close_stream(build_bad_response(), &mut stream).await
+            close_stream(build_bad_response(), stream).await
         } 
     };
 
-    close_stream(build_success_response(), &mut stream).await
+    return Some(HttpRequest { body, method: req.method.clone().unwrap().to_string() }) 
 }
 
 // Fuck it, I need the JSON body, but the httparse crate don't give any method to get this!
@@ -54,7 +59,7 @@ fn get_body(buff: String, body: &mut String) {
     }
 }
 
-fn build_success_response() -> String {
+pub fn build_success_response() -> String {
     let status = "HTTP/1.1 200 OK\r\n\r\n";
     let contents = json!({
         "message": "Ok",
@@ -65,7 +70,7 @@ fn build_success_response() -> String {
     return response;
 }
 
-fn build_bad_response() -> String {
+pub fn build_bad_response() -> String {
     let status = "HTTP/1.1 400 Bad Request\r\n\r\n";
     let contents = json!({
         "message": "Bad Request",
@@ -76,7 +81,7 @@ fn build_bad_response() -> String {
     return response;
 }
 
-async fn close_stream(response: String, stream: &mut TcpStream) {
+pub async fn close_stream(response: String, stream: &mut TcpStream) {
     let _ = stream.write_all(response.as_bytes()).await.unwrap();
 }
 
