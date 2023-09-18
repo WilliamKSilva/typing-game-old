@@ -12,6 +12,7 @@ pub struct Message {
 pub struct HttpRequest {
     body: String,
     method: String,
+    path: String,
 }
 
 pub async fn http_request(stream: &mut TcpStream) -> Option<HttpRequest> {
@@ -29,11 +30,23 @@ pub async fn http_request(stream: &mut TcpStream) -> Option<HttpRequest> {
     match req.parse(&buff_reader) {
         Ok(bytes) => (),
         Err(_) => {
-            close_stream(build_bad_response(), stream).await
+            return None
         } 
     };
 
-    return Some(HttpRequest { body, method: req.method.clone().unwrap().to_string() }) 
+    let method = req.method.clone().unwrap();
+
+    if method.is_empty() {
+        return None;
+    }
+
+    let path = req.path.clone().unwrap();
+
+    if path.is_empty() {
+        return None;
+    }
+
+    return Some(HttpRequest { body, method: method.to_string(), path: path.to_string()  }) 
 }
 
 // Fuck it, I need the JSON body, but the httparse crate don't give any method to get this!
