@@ -6,6 +6,7 @@ mod game;
 #[tokio::main]
 async fn main() {
     let listener = TcpListener::bind("127.0.0.1:3333").await.unwrap();
+    let mut games: Vec<game::Game> = Vec::new();
 
     println!("Listening on port: 3333");
 
