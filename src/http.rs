@@ -1,10 +1,16 @@
+use std::sync::{Mutex, Arc};
+
 use serde::de::DeserializeOwned;
-use tokio::{net::TcpStream, io::AsyncWriteExt};
 use serde::Deserialize;
 use serde_json::{self, json};
+use tokio::net::TcpSocket;
+use tokio::{io::AsyncWriteExt, net::TcpStream};
+
+use crate::game;
+use crate::http;
 
 enum Path {
-  Game,
+    Game,
 }
 
 impl Path {
@@ -41,9 +47,7 @@ pub async fn http_request(stream: &mut TcpStream) -> Option<HttpRequest> {
 
     match req.parse(&buff_reader) {
         Ok(bytes) => (),
-        Err(_) => {
-            return None
-        } 
+        Err(_) => return None,
     };
 
     let method = req.method.clone().unwrap();
@@ -58,7 +62,11 @@ pub async fn http_request(stream: &mut TcpStream) -> Option<HttpRequest> {
         return None;
     }
 
-    return Some(HttpRequest { body, method: method.to_string(), path: path.to_string()  }) 
+    return Some(HttpRequest {
+        body,
+        method: method.to_string().clone(),
+        path: path.to_string().clone(),
+    });
 }
 
 // Fuck it, I need the JSON body, but the httparse crate don't give any method to get this!
@@ -88,7 +96,7 @@ pub fn build_success_response() -> String {
     let status = "HTTP/1.1 200 OK\r\n\r\n";
     let contents = json!({
         "message": "Ok",
-    }); 
+    });
 
     let response = format!("{status}\r\n{contents}");
 
@@ -99,7 +107,7 @@ pub fn build_bad_response() -> String {
     let status = "HTTP/1.1 400 Bad Request\r\n\r\n";
     let contents = json!({
         "message": "Bad Request",
-    }); 
+    });
 
     let response = format!("{status}\r\n{contents}");
 
@@ -116,10 +124,26 @@ fn parse_json<T: DeserializeOwned>(buff: String) -> T {
     return data;
 }
 
-// Fancy web frameworks?? No!! We right by hand like the ancient people
-pub fn router(path: String) {
-    let game = Path::Game.as_str(); 
+// Fancy web framework routers?? No!! We right like the ancient people
+pub fn router(path: String, games: Arc<Mutex<game::Games>>, req: &http::HttpRequest) -> String {
+    let game = Path::Game.as_str();
+    let mut games = games.lock().unwrap();
     match path {
-       game => 
-    } 
+        game => {
+            let new_player: Option<game::NewPlayer> = match serde_json::from_str(&req.body.clone()) {
+                Ok(v) => Some(v),
+                Err(_) => None,
+            };
+
+            match new_player {
+                Some(v) => {
+                    let created = games.create(v);
+                    println!("{:?}", games);
+
+                    return build_success_response();
+                },
+                None => return build_bad_response()
+            }
+        }
+    }
 }
