@@ -3,6 +3,18 @@ use tokio::{net::TcpStream, io::AsyncWriteExt};
 use serde::Deserialize;
 use serde_json::{self, json};
 
+enum Path {
+  Game,
+}
+
+impl Path {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Path::Game => "/game",
+        }
+    }
+}
+
 #[derive(Deserialize, Debug)]
 pub struct Message {
     room: String,
@@ -10,9 +22,9 @@ pub struct Message {
 }
 
 pub struct HttpRequest {
-    body: String,
-    method: String,
-    path: String,
+    pub body: String,
+    pub method: String,
+    pub path: String,
 }
 
 pub async fn http_request(stream: &mut TcpStream) -> Option<HttpRequest> {
@@ -102,4 +114,12 @@ fn parse_json<T: DeserializeOwned>(buff: String) -> T {
     let data: T = serde_json::from_str(&buff).unwrap();
 
     return data;
+}
+
+// Fancy web frameworks?? No!! We right by hand like the ancient people
+pub fn router(path: String) {
+    let game = Path::Game.as_str(); 
+    match path {
+       game => 
+    } 
 }
