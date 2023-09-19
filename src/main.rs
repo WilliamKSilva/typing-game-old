@@ -14,13 +14,15 @@ async fn main() {
         let (mut tcp_stream, _) = match listener.accept().await {
             Ok(data) => data,
             Err(_) => panic!("aaaaaaaaaaa")
-        }; 
-
-        let request = match http::http_request(&mut tcp_stream).await {
-            Some(req) => req,
-            None => return http::close_stream(http::build_bad_response(), &mut tcp_stream).await
         };
 
-        let _ = http::router(request.path)
+        tokio::spawn(async move {
+            let request = match http::http_request(&mut tcp_stream).await {
+                Some(req) => req,
+                None => return http::close_stream(http::build_bad_response(), &mut tcp_stream).await
+            };
+
+            let _ = http::router(request.path);
+        });
     }
 }
