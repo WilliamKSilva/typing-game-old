@@ -7,20 +7,20 @@ use uuid::Uuid;
 
 #[derive(Debug)]
 pub struct Player {
-    name: Option<String>,
-    stream: Option<TcpStream>  
+  name: Option<String>,
+  stream: Option<TcpStream>  
 }
 
 #[derive(Deserialize, Debug)]
 pub struct NewPlayer {
-    name: String,
+  name: String,
 }
 
 #[derive(Debug)]
 pub struct Game {
-    id: String,
-    player_one: Player,
-    player_two: Player,
+  id: String,
+  player_one: Player,
+  player_two: Player,
 }
 
 #[derive(Debug)]
@@ -29,28 +29,28 @@ pub struct Games {
 }
 
 impl Games {
-    pub fn new() -> Games {
-        return Games{running: Vec::new()}
-    }
+  pub fn new() -> Games {
+    return Games{running: Vec::new()}
+  }
 
-    fn find(&mut self, id: String) -> &mut Game {
-        let game = &mut self.running.iter().position(|g| g.id == id);
+  fn find(&mut self, id: String) -> &mut Game {
+    let game = &mut self.running.iter().position(|g| g.id == id);
 
-        return &mut self.running[game.unwrap()];
-    }
+    return &mut self.running[game.unwrap()];
+  }
 
-    pub fn create(&mut self, new_player: NewPlayer) {
-        let id = Uuid::new_v4().to_string();
-        let player = Player{
-            name: Some(new_player.name),
-            stream: None,
-        }; 
-        let game = Game{
-            id,
-            player_one: player,
-            player_two: Player{name: None, stream: None}
-        };
+  pub fn create(&mut self, new_player: NewPlayer) {
+    let id = Uuid::new_v4().to_string();
+    let player = Player{
+      name: Some(new_player.name),
+      stream: None,
+    }; 
+    let game = Game{
+      id,
+      player_one: player,
+      player_two: Player{name: None, stream: None}
+    };
 
-        self.running.push(game);
-    } 
+    self.running.push(game);
+  }
 } 
