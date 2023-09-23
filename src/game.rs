@@ -1,5 +1,6 @@
 use tokio::net::TcpStream;
 use serde::Deserialize;
+use serde::Serialize;
 use serde_json::{self, json};
 use uuid::Uuid;
 
@@ -11,16 +12,24 @@ pub struct Player {
   stream: Option<TcpStream>  
 }
 
-#[derive(Deserialize, Debug)]
-pub struct NewPlayer {
-  name: String,
+#[derive(Debug, Deserialize)]
+pub struct NewGame {
+  pub name: String,
+  player_one: String,
 }
 
 #[derive(Debug)]
 pub struct Game {
-  id: String,
+  pub id: String,
+  pub name: String,
   player_one: Player,
   player_two: Player,
+}
+
+#[derive(Debug, Serialize)]
+pub struct GameResponse {
+  pub id: String,
+  pub name: String,
 }
 
 #[derive(Debug)]
@@ -39,18 +48,26 @@ impl Games {
     return &mut self.running[game.unwrap()];
   }
 
-  pub fn create(&mut self, new_player: NewPlayer) {
+  pub fn create(&mut self, new_game: NewGame) -> &Game {
     let id = Uuid::new_v4().to_string();
     let player = Player{
-      name: Some(new_player.name),
+      name: Some(new_game.player_one),
       stream: None,
     }; 
     let game = Game{
       id,
+      name: new_game.name,
       player_one: player,
       player_two: Player{name: None, stream: None}
     };
 
     self.running.push(game);
+
+    let created_game = match self.running.last() {
+      Some(v) => v,
+      None => panic!("well we fucked up")
+    };
+
+    return created_game;
   }
 } 
