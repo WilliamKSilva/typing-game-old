@@ -1,23 +1,26 @@
 use std::sync::{Arc, Mutex};
 
 use serde::de::DeserializeOwned;
+use serde::ser::Serialize;
 use serde::Deserialize;
-use serde::ser::{Serialize};
-use serde_json::{self, json, ser};
-use tokio::net::TcpSocket;
+use serde_json::{self, json};
 use tokio::{io::AsyncWriteExt, net::TcpStream};
 
 use crate::game;
 use crate::http;
 
 enum Path {
-    Game,
+    NewGame,
+    JoinGame,
 }
 
+// Just pass everything on body of the request
+// No query params please
 impl Path {
     pub fn as_str(&self) -> &'static str {
         match self {
-            Path::Game => "/game",
+            Path::NewGame => "/game/new",
+            Path::JoinGame => "/game/join",
         }
     }
 }
@@ -93,15 +96,15 @@ fn get_body(buff: String, body: &mut String) {
     }
 }
 
-pub fn build_success_response<T: Serialize>(data: Option<T>) -> String
-{
+pub fn build_success_response<T: Serialize>(data: Option<T>) -> String {
     let status = "HTTP/1.1 200 OK\r\n\r\n";
-	let contents = match data {
-		Some(v) => serde_json::to_string(&v).unwrap(),
-		None => json!({
-			"message": "ok"
-		}).to_string()
-	};
+    let contents = match data {
+        Some(v) => serde_json::to_string(&v).unwrap(),
+        None => json!({
+            "message": "ok"
+        })
+        .to_string(),
+    };
 
     let response = format!("{status}\r\n{contents}");
 
@@ -133,26 +136,37 @@ fn parse_json<T: DeserializeOwned>(buff: String) -> Option<T> {
 }
 
 // Fancy web framework routers?? No!! We right like the ancient people
-pub fn router(path: String, games: Arc<Mutex<game::Games>>, req: &http::HttpRequest) -> String {
-    let game = Path::Game.as_str();
-    let mut games = games.lock().unwrap();
+pub async fn router(
+    path: String,
+    games: &mut game::Games,
+    req: &http::HttpRequest,
+    mut stream: TcpStream,
+) {
+    let new_game_path = Path::NewGame.as_str();
+    let enter_game_path = Path::JoinGame.as_str();
     match path {
-        game => {
-            let new_game: game::NewGame = match parse_json::<game::NewGame>(req.body.clone())
-            {
+        new_game_path => {
+            let new_game: game::NewGame = match parse_json::<game::NewGame>(req.body.clone()) {
                 Some(value) => value,
-                None => return build_bad_response(),
+                None => return close_stream(build_bad_response(), &mut stream).await,
             };
 
             let created = games.create(new_game);
-			let game_response = game::GameResponse{
-				id: created.id.clone(),
-				name: created.name.clone()
-			};
+            let game_response = game::GameResponse {
+                id: created.id.clone(),
+                name: created.name.clone(),
+            };
 
-            println!("{:?}", games);
+            return close_stream(build_success_response(Some(game_response)), &mut stream).await;
+        }
+        enter_game_path => {
+            let enter_game: game::EnterGame = match parse_json::<game::EnterGame>(req.body.clone())
+            {
+                Some(v) => v,
+                None => return close_stream(build_bad_response(), &mut stream).await,
+            };
 
-            return build_success_response(Some(game_response));
+            return ();
         }
     }
 }

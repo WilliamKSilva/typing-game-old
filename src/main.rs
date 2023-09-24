@@ -1,25 +1,24 @@
-use std::sync::{Arc, Mutex};
+use std::sync::{Mutex};
 
 use tokio::net::TcpListener;
 
 mod game;
 mod http;
 
+static GAMES: Mutex<game::Games> = Mutex::new(game::Games::new());
+
 #[tokio::main]
 async fn main() {
 	let listener = TcpListener::bind("127.0.0.1:3333").await.unwrap();
-	let games = Arc::new(Mutex::new(game::Games::new()));
-
 	println!("Listening on port: 3333");
 
 	loop {
-		let data = Arc::clone(&games);
 		let (mut tcp_stream, _) = match listener.accept().await {
 			Ok(data) => data,
 			Err(_) => panic!("aaaaaaaaaaa"),
 		};
 
-		tokio::spawn(async move {
+		let join_handle = tokio::spawn(async move {
 			let request = match http::http_request(&mut tcp_stream).await {
 				Some(req) => req,
 				None => {
@@ -27,9 +26,11 @@ async fn main() {
 				}
 			};
 
-			let response = http::router(request.path.clone(), data, &request);
+			let mut games = GAMES.lock().unwrap();
 
-			http::close_stream(response, &mut tcp_stream).await;
+			http::router(request.path.clone(), &mut games, &request, tcp_stream);
 		});
+
+		join_handle.await.unwrap();
 	}
 }
