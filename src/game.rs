@@ -12,8 +12,9 @@ use crate::http::close_stream;
 
 #[derive(Debug)]
 pub struct Player {
-  name: Option<String>,
-  buff: Option<String>
+    pub name: Option<String>,
+    pub buff: Option<String>,
+    pub stream: Option<TcpStream>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -22,18 +23,18 @@ pub struct NewGame {
     player_one: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct EnterGame {
-    id: String,
-    player: String,
+    pub id: String,
+    pub player: String,
 }
 
 #[derive(Debug)]
 pub struct Game {
     pub id: String,
     pub name: String,
-    player_one: Player,
-    player_two: Player,
+    pub player_one: Player,
+    pub player_two: Player,
 }
 
 #[derive(Debug, Serialize)]
@@ -47,6 +48,16 @@ pub struct Games {
     running: Vec<Game>,
 }
 
+impl Game {
+    pub fn find_player_and_opponent(&mut self, name: String) -> (Option<&mut TcpStream>, Option<&mut TcpStream>) {
+        if self.player_one.name.clone().unwrap() == name {
+            return (self.player_one.stream.as_mut(), self.player_two.stream.as_mut());
+        } else {
+            return (self.player_two.stream.as_mut(), self.player_one.stream.as_mut());
+        }
+    }
+}
+
 impl Games {
     pub const fn new() -> Games {
         return Games {
@@ -54,7 +65,7 @@ impl Games {
         };
     }
 
-    fn find(&mut self, id: String) -> &mut Game {
+    pub fn find(&mut self, id: String) -> &mut Game {
         let game = self.running.iter_mut().find(|g| g.id == id).unwrap();
 
         return game;
@@ -65,6 +76,7 @@ impl Games {
         let player = Player {
             name: None,
             buff: None,
+            stream: None,
         };
         let game = Game {
             id,
@@ -73,6 +85,7 @@ impl Games {
             player_two: Player {
                 name: None,
                 buff: None,
+                stream: None,
             },
         };
 
@@ -86,30 +99,22 @@ impl Games {
         return created_game;
     }
 
-    pub async fn join(
-        &mut self,
-        data: EnterGame,
-        stream: &'static mut TcpStream,
-    ) -> (Option<&Game>, Option<&mut TcpStream>) {
+    pub fn join(&mut self, data: EnterGame, mut stream: TcpStream) {
         let game: &mut Game = match self.running.iter_mut().find(|g| g.id == data.id) {
             Some(v) => v,
-            None => {
-                return (None, Some(stream));
-            }
+            None => return,
         };
 
         match &game.player_one.name {
             Some(v) => {
                 game.player_two.name = Some(data.player);
-                game.player_two.buff= None;
-
-                return (Some(game), None);
+                game.player_two.buff = None;
+                game.player_two.stream = Some(stream);
             }
             None => {
                 game.player_one.name = Some(data.player);
-                game.player_one.buff = None; 
-
-                return (Some(game), None);
+                game.player_one.buff = None;
+                game.player_one.stream = Some(stream);
             }
         }
     }
