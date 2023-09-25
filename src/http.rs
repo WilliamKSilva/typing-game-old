@@ -4,7 +4,6 @@ use std::sync::Arc;
 
 use serde::de::DeserializeOwned;
 use serde::ser::Serialize;
-use serde::Deserialize;
 use serde_json::{self, json};
 use tokio::io::AsyncReadExt;
 use tokio::sync::Mutex;
@@ -167,14 +166,11 @@ pub async fn router(
             let new_game: game::NewGame = match parse_json::<game::NewGame>(req.body.clone()) {
                 Ok(value) => value,
                 Err(e) => {
-                    let response = build_bad_response(Some(e.to_string())); 
+                    let response = build_bad_response(Some(e)); 
                     return close_stream(response, &mut stream).await;
                 },
             };
-
-            println!("{:?}", "iushdaisuhda");
-            println!("{:?}", new_game);
-
+            
             let created = games.create(new_game);
             let game_response = game::GameResponse{
                 id: created.id.clone(),
@@ -186,8 +182,8 @@ pub async fn router(
         enter_game_path => {
             let enter_game: game::EnterGame = match parse_json::<game::EnterGame>(req.body.clone())
             {
-                Some(v) => v,
-                None => return close_stream(build_bad_response(), &mut stream).await,
+                Ok(v) => v,
+                Err(e) => return close_stream(build_bad_response(Some(e)), &mut stream).await,
             };
 
             let id = enter_game.id.clone();

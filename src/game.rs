@@ -15,7 +15,6 @@ pub struct Player {
 #[derive(Debug, Deserialize)]
 pub struct NewGame {
     pub name: String,
-    pub player_one: String,
 }
 
 #[derive(Debug, Deserialize, Clone)]
