@@ -1,12 +1,7 @@
 use serde::Deserialize;
 use serde::Serialize;
-use serde_json::{self, json};
 use tokio::net::TcpStream;
 use uuid::Uuid;
-
-use crate::http::build_bad_response;
-use crate::http::build_success_response;
-use crate::http::close_stream;
 
 // This is propably a bad way of storing players streams
 
@@ -20,7 +15,7 @@ pub struct Player {
 #[derive(Debug, Deserialize)]
 pub struct NewGame {
     pub name: String,
-    player_one: String,
+    pub player_one: String,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -99,7 +94,7 @@ impl Games {
         return created_game;
     }
 
-    pub fn join(&mut self, data: EnterGame, mut stream: TcpStream) {
+    pub fn join(&mut self, data: EnterGame, stream: TcpStream) {
         let game: &mut Game = match self.running.iter_mut().find(|g| g.id == data.id) {
             Some(v) => v,
             None => return,

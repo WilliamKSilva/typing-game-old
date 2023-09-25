@@ -1,10 +1,13 @@
-use std::sync::{Arc, Mutex};
+use std::error::Error;
+use std::fmt::{Debug, self};
+use std::sync::Arc;
 
 use serde::de::DeserializeOwned;
 use serde::ser::Serialize;
 use serde::Deserialize;
 use serde_json::{self, json};
 use tokio::io::AsyncReadExt;
+use tokio::sync::Mutex;
 use tokio::{io::AsyncWriteExt, net::TcpStream};
 
 use crate::game;
@@ -26,17 +29,22 @@ impl Path {
     }
 }
 
-#[derive(Deserialize, Debug)]
-pub struct Message {
-    room: String,
-    name: String,
-}
-
 pub struct HttpRequest {
     pub body: String,
     pub method: String,
     pub path: String,
 }
+
+#[derive(Debug)]
+pub struct GenericError(String);
+
+impl fmt::Display for GenericError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "There is an error: {}", self.0)
+    }
+}
+
+impl Error for GenericError {}
 
 pub async fn http_request(stream: &mut TcpStream) -> Option<HttpRequest> {
     let mut headers = [httparse::EMPTY_HEADER; 64];
@@ -97,29 +105,25 @@ fn get_body(buff: String, body: &mut String) {
     }
 }
 
-pub fn build_success_response() -> String {
+pub fn build_success_response<T: Serialize>(data: Option<T>) -> String {
     let status = "HTTP/1.1 200 OK\r\n\r\n";
-    // let contents = match data {
-    //     Some(v) => serde_json::to_string(&v).unwrap(),
-    //     None => json!({
-    //         "message": "ok"
-    //     })
-    //     .to_string(),
-    // };
-
-    let contents = json!({
+    let contents = match data {
+        Some(v) => serde_json::to_string(&v).unwrap(),
+        None => json!({
             "message": "ok"
-        });
-
+        })
+        .to_string(),
+    };
+    
     let response = format!("{status}\r\n{contents}");
 
     return response;
 }
 
-pub fn build_bad_response() -> String {
+pub fn build_bad_response(error: Option<String>) -> String {
     let status = "HTTP/1.1 400 Bad Request\r\n\r\n";
     let contents = json!({
-        "message": "Bad Request",
+        "message": format!("{}", error.unwrap()),
     });
 
     let response = format!("{status}\r\n{contents}");
@@ -131,13 +135,20 @@ pub async fn close_stream(response: String, stream: &mut TcpStream) {
     let _ = stream.write_all(response.as_bytes()).await.unwrap();
 }
 
-fn parse_json<T: DeserializeOwned>(buff: String) -> Option<T> {
-    let data: Option<T> = match serde_json::from_str(&buff) {
-        Ok(v) => Some(v),
-        Err(_) => None,
-    };
 
-    return data;
+// fn parse_json<T>(buff: String) -> Result<T, Box<dyn std::error::Error + Send + Sync>>
+
+fn parse_json<T>(buff: String) -> Result<T, String>
+where
+    T: DeserializeOwned,
+    T: Debug,
+{
+    let data: T = match serde_json::from_str(&buff) {
+        Ok(v) => v,
+        Err(e) => return Err(e.to_string()),
+    };
+    
+    return Ok(data);
 }
 
 // Fancy web framework routers?? No!! We right like the ancient people
@@ -149,19 +160,28 @@ pub async fn router(
 ) {
     let new_game_path = Path::NewGame.as_str();
     let enter_game_path = Path::JoinGame.as_str();
+    let mut games = games_mutex.lock().await;
     match path {
         new_game_path => {
+            println!("{:?}", req.body.clone());
             let new_game: game::NewGame = match parse_json::<game::NewGame>(req.body.clone()) {
-                Some(value) => value,
-                None => return close_stream(build_bad_response(), &mut stream).await,
+                Ok(value) => value,
+                Err(e) => {
+                    let response = build_bad_response(Some(e.to_string())); 
+                    return close_stream(response, &mut stream).await;
+                },
             };
 
-            {
-                let mut games = games_mutex.lock().unwrap();
-                let created = games.create(new_game);
-            }
+            println!("{:?}", "iushdaisuhda");
+            println!("{:?}", new_game);
 
-            return close_stream(build_success_response(), &mut stream).await;
+            let created = games.create(new_game);
+            let game_response = game::GameResponse{
+                id: created.id.clone(),
+                name: created.name.clone(),
+            };
+
+            return close_stream(build_success_response(Some(game_response)), &mut stream).await;
         }
         enter_game_path => {
             let enter_game: game::EnterGame = match parse_json::<game::EnterGame>(req.body.clone())
@@ -172,8 +192,6 @@ pub async fn router(
 
             let id = enter_game.id.clone();
             let name = enter_game.player.clone();
-
-            let mut games = games_mutex.lock().unwrap();
 
             let _ = games.join(enter_game, stream);
 
