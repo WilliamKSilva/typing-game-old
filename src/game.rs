@@ -93,10 +93,10 @@ impl Games {
         return created_game;
     }
 
-    pub fn join(&mut self, data: EnterGame, stream: TcpStream) {
+    pub fn join(&mut self, data: EnterGame, stream: TcpStream) -> Option<&mut Game> {
         let game: &mut Game = match self.running.iter_mut().find(|g| g.id == data.id) {
             Some(v) => v,
-            None => return,
+            None => return None,
         };
 
         match &game.player_one.name {
@@ -104,11 +104,15 @@ impl Games {
                 game.player_two.name = Some(data.player);
                 game.player_two.buff = None;
                 game.player_two.stream = Some(stream);
+
+                return Some(game);
             }
             None => {
                 game.player_one.name = Some(data.player);
                 game.player_one.buff = None;
                 game.player_one.stream = Some(stream);
+
+                return Some(game);
             }
         }
     }

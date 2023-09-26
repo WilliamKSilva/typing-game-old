@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use tokio::sync::{Mutex};
+use tokio::sync::Mutex;
 
 use tokio::net::TcpListener;
 
@@ -21,15 +21,15 @@ async fn main() {
 			Err(_) => panic!("aaaaaaaaaaa"),
 		};
 
-		tokio::spawn(async move {
+		let _ = tokio::spawn(async move {
 			let request = match http::http_request(&mut tcp_stream).await {
 				Some(req) => req,
 				None => {
-					return http::close_stream(http::build_bad_response(None), &mut tcp_stream).await
+					return http::write(http::build_bad_response(None), &mut tcp_stream).await
 				}
 			};
 
 			http::router(request.path.clone(), games_clone, &request, tcp_stream).await;
-		});
+		}).await;
 	}
 }

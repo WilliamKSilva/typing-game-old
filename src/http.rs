@@ -1,5 +1,5 @@
 use std::error::Error;
-use std::fmt::{Debug, self};
+use std::fmt::{self, Debug};
 use std::sync::Arc;
 
 use serde::de::DeserializeOwned;
@@ -7,9 +7,10 @@ use serde::ser::Serialize;
 use serde_json::{self, json};
 use tokio::io::AsyncReadExt;
 use tokio::sync::Mutex;
+use tokio::task;
 use tokio::{io::AsyncWriteExt, net::TcpStream};
 
-use crate::game;
+use crate::game::{self, GameResponse};
 use crate::http;
 
 enum Path {
@@ -113,7 +114,7 @@ pub fn build_success_response<T: Serialize>(data: Option<T>) -> String {
         })
         .to_string(),
     };
-    
+
     let response = format!("{status}\r\n{contents}");
 
     return response;
@@ -130,10 +131,9 @@ pub fn build_bad_response(error: Option<String>) -> String {
     return response;
 }
 
-pub async fn close_stream(response: String, stream: &mut TcpStream) {
+pub async fn write(response: String, stream: &mut TcpStream) {
     let _ = stream.write_all(response.as_bytes()).await.unwrap();
 }
-
 
 // fn parse_json<T>(buff: String) -> Result<T, Box<dyn std::error::Error + Send + Sync>>
 
@@ -146,7 +146,7 @@ where
         Ok(v) => v,
         Err(e) => return Err(e.to_string()),
     };
-    
+
     return Ok(data);
 }
 
@@ -157,72 +157,45 @@ pub async fn router(
     req: &http::HttpRequest,
     mut stream: TcpStream,
 ) {
-    let new_game_path = Path::NewGame.as_str();
-    let enter_game_path = Path::JoinGame.as_str();
+    // TODO alterar toda a logica de jogo pra usar channels
+    // Entender melhor como armazenar esses channels do Tokio
     let mut games = games_mutex.lock().await;
-    match path {
-        new_game_path => {
-            println!("{:?}", req.body.clone());
+    match path.as_str() {
+        "/game/new" => {
             let new_game: game::NewGame = match parse_json::<game::NewGame>(req.body.clone()) {
                 Ok(value) => value,
                 Err(e) => {
-                    let response = build_bad_response(Some(e)); 
-                    return close_stream(response, &mut stream).await;
-                },
+                    let response = build_bad_response(Some(e));
+                    return write(response, &mut stream).await;
+                }
             };
-            
+
             let created = games.create(new_game);
-            let game_response = game::GameResponse{
+            let game_response = game::GameResponse {
                 id: created.id.clone(),
                 name: created.name.clone(),
             };
 
-            return close_stream(build_success_response(Some(game_response)), &mut stream).await;
+            return write(build_success_response(Some(game_response)), &mut stream).await;
         }
-        enter_game_path => {
+        "/game/join" => {
             let enter_game: game::EnterGame = match parse_json::<game::EnterGame>(req.body.clone())
             {
                 Ok(v) => v,
-                Err(e) => return close_stream(build_bad_response(Some(e)), &mut stream).await,
+                Err(e) => return write(build_bad_response(Some(e)), &mut stream).await,
             };
 
             let id = enter_game.id.clone();
             let name = enter_game.player.clone();
 
-            let _ = games.join(enter_game, stream);
-
-            loop {
-                let mut buff_reader = vec![0; 1024];
-
-                let game = games.find(id.clone());
-
-                let (player, opponent) = game.find_player_and_opponent(name.clone());
-
-                // I don't have a clue how to deal with errors in this scenario
-                let player_stream = match player {
-                    Some(v) => v,
-                    None => return,
-                };
-
-                let opponent_stream = match opponent {
-                    Some(v) => v,
-                    None => {
-                        print!("No opponent yet");
-                        continue;
-                    }
-                };
-
-                match player_stream.read(&mut buff_reader).await {
-                    Ok(0) => return,
-                    Ok(n) => {
-                        let teste = "aijksudah";
-                        let _ = opponent_stream.try_write(teste.as_bytes());
-                    }
-                    Err(_) => {
-                        return;
-                    }
-                }
-            }
+            games.join(enter_game, stream).unwrap();
+        }
+        _ => {
+            return write(
+                build_bad_response(Some(String::from("Not found"))),
+                &mut stream,
+            )
+            .await;
         }
     }
 }
