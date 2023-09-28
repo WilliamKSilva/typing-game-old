@@ -6,7 +6,7 @@ export const main = () => {
 	const port = 3333
 
 	server.listen(port, () => {
-		console.log(`Server listening on port: ${3333}`)
+		console.log(`Server listening on port: ${port}`)
 	})
 
 	server.on('request', (req, res) => {
@@ -17,6 +17,9 @@ export const main = () => {
 		req.on('end', () => {
 			console.log(buff)
 		})
+
+		res.write("200 OK")
+		res.end()
 	})
 }
 
