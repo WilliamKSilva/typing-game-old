@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use tokio::sync::Mutex;
+use std::sync::Mutex;
 
 use tokio::net::TcpListener;
 

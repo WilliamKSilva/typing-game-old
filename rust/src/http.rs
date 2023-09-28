@@ -5,9 +5,7 @@ use std::sync::Arc;
 use serde::de::DeserializeOwned;
 use serde::ser::Serialize;
 use serde_json::{self, json};
-use tokio::io::AsyncReadExt;
-use tokio::sync::Mutex;
-use tokio::task;
+use std::sync::Mutex;
 use tokio::{io::AsyncWriteExt, net::TcpStream};
 
 use crate::game::{self, GameResponse};
@@ -159,9 +157,10 @@ pub async fn router(
 ) {
     // TODO alterar toda a logica de jogo pra usar channels
     // Entender melhor como armazenar esses channels do Tokio
-    let mut games = games_mutex.lock().await;
     match path.as_str() {
         "/game/new" => {
+            let mut games = games_mutex.lock().unwrap();
+
             let new_game: game::NewGame = match parse_json::<game::NewGame>(req.body.clone()) {
                 Ok(value) => value,
                 Err(e) => {
@@ -179,6 +178,8 @@ pub async fn router(
             return write(build_success_response(Some(game_response)), &mut stream).await;
         }
         "/game/join" => {
+            let mut games = games_mutex.lock().unwrap();
+
             let enter_game: game::EnterGame = match parse_json::<game::EnterGame>(req.body.clone())
             {
                 Ok(v) => v,
