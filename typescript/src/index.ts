@@ -1,6 +1,6 @@
 import http from "node:http";
 import Games from "./games";
-import HttpRouter from "./http";
+import Http from "./http";
 
 const server = http.createServer();
 
@@ -11,16 +11,16 @@ server.listen(port, () => {
 });
 
 // Don't know if this is thread safe or will need an mutex or some shit like that!
+// The callbacks are "async" code so I think that shit can happen 
 let games = new Games();
 
 server.on("request", (req, res) => {
-  const router = new HttpRouter(req, res, games);
+  const router = new Http(req, res, games);
   try {
     router.redirect();
 
     router.write_and_close();
   } catch (error) {
-    console.log(error);
     router.write_and_close();
   }
 });

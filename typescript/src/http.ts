@@ -6,11 +6,12 @@ type NewGameData = {
   player: string;
 };
 
-export default class HttpRouter {
+export default class Http {
   constructor(
     private req: IncomingMessage,
     private res: ServerResponse,
     private games: Games,
+    private routes: string[] = ["/games/new"],
   ) {}
 
   private async body(callback: (msg: string) => void) {
@@ -35,6 +36,14 @@ export default class HttpRouter {
 
   // Bad name, but makes sense I think
   public redirect() {
+    if (!this.req.url) {
+      throw new Error("Internal server error")
+    }
+
+    if (!this.routes.includes(this.req.url)) {
+      throw new Error("Not found")
+    }
+
     console.log(this.req.url);
     switch (this.req.url) {
       case "/games/new":
