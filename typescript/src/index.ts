@@ -1,26 +1,26 @@
-import http from "node:http"
+import http from "node:http";
+import Games from "./games";
+import HttpRouter from "./http";
 
-export const main = () => {
-	const server = http.createServer()
+const server = http.createServer();
 
-	const port = 3333
+const port = 3333;
 
-	server.listen(port, () => {
-		console.log(`Server listening on port: ${port}`)
-	})
+server.listen(port, () => {
+  console.log(`Server listening on port: ${port}`);
+});
 
-	server.on('request', (req, res) => {
-		let buff = ''
-		req.on('data', (chunk) => {
-			buff += chunk
-		})
-		req.on('end', () => {
-			console.log(buff)
-		})
+// Don't know if this is thread safe or will need an mutex or some shit like that!
+let games = new Games();
 
-		res.write("200 OK")
-		res.end()
-	})
-}
+server.on("request", (req, res) => {
+  const router = new HttpRouter(req, res, games);
+  try {
+    router.redirect();
 
-main()
+    router.write_and_close();
+  } catch (error) {
+    console.log(error);
+    router.write_and_close();
+  }
+});
