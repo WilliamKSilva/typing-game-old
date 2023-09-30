@@ -15,12 +15,26 @@ server.listen(port, () => {
 let games = new Games();
 
 server.on("request", (req, res) => {
-  const router = new Http(req, res, games);
+  const http = new Http(req, res, games);
   try {
-    router.redirect();
+    http.redirect();
 
-    router.write_and_close();
-  } catch (error) {
-    router.write_and_close();
+    const json = {
+      message: "ok",
+      status: 200 
+    }
+
+    const response = http.response(json)
+
+    http.write_and_close(response, 200);
+  } catch (error: any) {
+    const json = {
+      message: error.message,
+      status: error.status_code
+    }
+
+    const response = http.response(json)
+
+    http.write_and_close(response, error.status_code);
   }
 });

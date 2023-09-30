@@ -1,4 +1,5 @@
 import { IncomingMessage, ServerResponse } from "http";
+import { InternalServerError, NotFoundError } from "./exceptions";
 import Games from "./games";
 
 type NewGameData = {
@@ -14,7 +15,7 @@ export default class Http {
     private routes: string[] = ["/games/new"],
   ) {}
 
-  private async body(callback: (msg: string) => void) {
+  private body(callback: (msg: string) => void) {
     let buff = "";
     this.req.on("data", (chunk) => {
       buff += chunk;
@@ -25,26 +26,27 @@ export default class Http {
     });
   }
 
-  public write_and_close() {
-    const response = {
-      message: "ok",
-    };
+  public response<T>(json: T): string {
+    const body = JSON.stringify(json)
+    return body 
+  }
 
-    this.res.write(JSON.stringify(response));
+  public write_and_close(response: string, status_code: number) {
+    this.res.statusCode = status_code
+    this.res.write(response);
     this.res.end();
   }
 
   // Bad name, but makes sense I think
   public redirect() {
     if (!this.req.url) {
-      throw new Error("Internal server error")
+      throw new InternalServerError()
     }
 
     if (!this.routes.includes(this.req.url)) {
-      throw new Error("Not found")
+      throw new NotFoundError()
     }
 
-    console.log(this.req.url);
     switch (this.req.url) {
       case "/games/new":
         this.body((body) => {
