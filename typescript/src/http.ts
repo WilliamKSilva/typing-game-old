@@ -12,7 +12,7 @@ export default class Http {
     private req: IncomingMessage,
     private res: ServerResponse,
     private games: Games,
-    private routes: string[] = ["/games/new"],
+    private routes: string[] = ["/games/new", "/games/join"],
   ) {}
 
   private body(callback: (msg: string) => void) {

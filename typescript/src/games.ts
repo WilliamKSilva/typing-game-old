@@ -1,8 +1,14 @@
 type Game = {
   id: string
   name: string
-  player_one: string
-  player_two: string
+  player_one: {
+    name: string
+    buff: string
+  } 
+  player_two: {
+    name: string
+    buff: string
+  } 
 }
 
 export default class Games {
@@ -12,8 +18,14 @@ export default class Games {
     this.running.push({
       id: "",
       name,
-      player_one: player,
-      player_two: ""
+      player_one: {
+        name,
+        buff: ''
+      },
+      player_two: {
+        name: '',
+        buff: ''
+      }
     })
   }
 }

@@ -14,6 +14,20 @@ server.listen(port, () => {
 // The callbacks are "async" code so I think that shit can happen 
 let games = new Games();
 
+server.on('upgrade', (req, socket, head) => {
+  socket.write('HTTP/1.1 101 Web Socket Protocol Handshake\r\n' +
+               'Upgrade: WebSocket\r\n' +
+               'Connection: Upgrade\r\n' +
+               '\r\n');
+               console.log("Chegou aqui!")
+
+
+               socket.on('data', (chunk) => {
+                console.log(chunk)
+               })
+  socket.pipe(socket);
+});
+
 server.on("request", (req, res) => {
   const http = new Http(req, res, games);
   try {
