@@ -1,8 +1,10 @@
 import http from "node:http";
 import Games from "./games";
 import Http from "./http";
+import Websocket from './websocket';
 
 const server = http.createServer();
+const websocket = new Websocket(server) 
 
 const port = 3333;
 
@@ -10,23 +12,12 @@ server.listen(port, () => {
   console.log(`Server listening on port: ${port}`);
 });
 
-// Don't know if this is thread safe or will need an mutex or some shit like that!
-// The callbacks are "async" code so I think that shit can happen 
+// The callbacks are "async" code so I think that race conditions can happen 
 let games = new Games();
 
-server.on('upgrade', (req, socket, head) => {
-  socket.write('HTTP/1.1 101 Web Socket Protocol Handshake\r\n' +
-               'Upgrade: WebSocket\r\n' +
-               'Connection: Upgrade\r\n' +
-               '\r\n');
-               console.log("Chegou aqui!")
-
-
-               socket.on('data', (chunk) => {
-                console.log(chunk)
-               })
-  socket.pipe(socket);
-});
+websocket.server.on('connection', (socket) => {
+  console.log("Socket connected!")
+})
 
 server.on("request", (req, res) => {
   const http = new Http(req, res, games);
@@ -35,19 +26,19 @@ server.on("request", (req, res) => {
 
     const json = {
       message: "ok",
-      status: 200 
-    }
+      status: 200,
+    };
 
-    const response = http.response(json)
+    const response = http.response(json);
 
     http.write_and_close(response, 200);
   } catch (error: any) {
     const json = {
       message: error.message,
-      status: error.status_code
-    }
+      status: error.status_code,
+    };
 
-    const response = http.response(json)
+    const response = http.response(json);
 
     http.write_and_close(response, error.status_code);
   }
