@@ -27,20 +27,20 @@ server.on("request", (req, res) => {
   const http = new Http(req, res, games);
   try {
     http.redirect((response_data) => {
-      let response: string = ''
-
       if (!response_data) {
         const json = {
           message: "ok",
           status: 200,
         };
 
-        response = http.response(json);
+        const response = http.response(json);
+        http.write_and_close(response, 200);
       } else {
-        response = http.response(response_data);
+        const response = http.response(response_data);
+
+        http.write_and_close(response, 200);
       }
 
-      http.write_and_close(response, 200);
     });
   } catch (error: any) {
     const json = {
