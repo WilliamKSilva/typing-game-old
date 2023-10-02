@@ -18,6 +18,7 @@ server.listen(port, () => {
 // The callbacks are "async" code so I think that race conditions can happen
 let games = new Games();
 
+// TODO try to move Websocket event's to Websocket class
 websocket.on("connection", (socket, req) => {
   let full_url = `http://127.0.0.1:3333${req.url}`;
   const url = new URL(full_url);
@@ -65,6 +66,12 @@ websocket.on("connection", (socket, req) => {
     }
 
     player.buff = buff
+
+    const state = {
+      opponent: opponent.buff
+    }
+
+    socket.send(Buffer.from(JSON.stringify(state)))
   });
 });
 
