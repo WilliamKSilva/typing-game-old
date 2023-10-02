@@ -25,7 +25,7 @@ websocket.on("connection", (socket, req) => {
   socket.on("error", console.error);
 
   if (!game_id) {
-    socket.close();
+    socket.terminate();
     return;
   }
 
@@ -33,7 +33,7 @@ websocket.on("connection", (socket, req) => {
 
   if (!game) {
     console.log("socket: closed");
-    socket.close();
+    socket.terminate();
     return;
   }
 
