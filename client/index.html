@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+ <p>Hello world!</p> 
+ <input id="input" placeholder="Digita ai..." />
+</body>
+<script>
+  const websocket = new WebSocket("ws://127.0.0.1:3333/games/join")
+
+  const input = document.getElementById("input")
+
+  input.addEventListener("input", (event) => {
+    websocket.send(event.target.value)
+  })
+</script>
+</html>

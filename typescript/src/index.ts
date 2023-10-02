@@ -1,10 +1,13 @@
 import http from "node:http";
+import { parse } from "url";
+import { WebSocketServer } from "ws";
 import Games from "./games";
 import Http from "./http";
-import Websocket from "./websocket";
 
 const server = http.createServer();
-const websocket = new Websocket(server);
+const websocket = new WebSocketServer({
+  noServer: true
+});
 
 const port = 3333;
 
@@ -15,8 +18,30 @@ server.listen(port, () => {
 // The callbacks are "async" code so I think that race conditions can happen
 let games = new Games();
 
-websocket.server.on("connection", (socket) => {
-  console.log("Socket connected!");
+websocket.on("connection", (socket) => {
+  socket.on("error", console.error);
+
+  socket.on("message", (data) => {
+    let buff = ""
+    buff += data
+    console.log(buff)
+  })
+});
+
+server.on("upgrade", (request, socket, head) => {
+  const { pathname } = parse(request.url!);
+
+  if (pathname == "/games/join") {
+  console.log(pathname)
+    websocket.handleUpgrade(request, socket, head, function done(ws) {
+      websocket.emit("connection", ws, request);
+    });
+
+    return;
+  }
+
+  socket.destroy();
+  return;
 });
 
 server.on("error", (err) => {
@@ -40,7 +65,6 @@ server.on("request", (req, res) => {
 
         http.write_and_close(response, 200);
       }
-
     });
   } catch (error: any) {
     const json = {
