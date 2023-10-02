@@ -6,7 +6,7 @@ import Http from "./http";
 
 const server = http.createServer();
 const websocket = new WebSocketServer({
-  noServer: true
+  noServer: true,
 });
 
 const port = 3333;
@@ -18,21 +18,39 @@ server.listen(port, () => {
 // The callbacks are "async" code so I think that race conditions can happen
 let games = new Games();
 
-websocket.on("connection", (socket) => {
+websocket.on("connection", (socket, req) => {
+  let full_url = `http://127.0.0.1:3333${req.url}`;
+  const url = new URL(full_url);
+  const game_id = url.searchParams.get("id");
   socket.on("error", console.error);
 
+  if (!game_id) {
+    socket.close();
+    return;
+  }
+
+  const game = games.find_by_id(game_id);
+
+  if (!game) {
+    console.log("socket: closed");
+    socket.close();
+    return;
+  }
+
   socket.on("message", (data) => {
-    let buff = ""
-    buff += data
-    console.log(buff)
-  })
+    let buff = "";
+    buff += data;
+
+    game.player_one.buff = buff;
+  });
 });
 
 server.on("upgrade", (request, socket, head) => {
   const { pathname } = parse(request.url!);
 
+  console.log("pathname", pathname);
+
   if (pathname == "/games/join") {
-  console.log(pathname)
     websocket.handleUpgrade(request, socket, head, function done(ws) {
       websocket.emit("connection", ws, request);
     });

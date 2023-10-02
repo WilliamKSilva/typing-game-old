@@ -34,4 +34,8 @@ export default class Games {
 
     return game
   }
+
+  public find_by_id(id: string): Game | undefined {
+    return this.running.find((game) => game.id === id)
+  }
 }
