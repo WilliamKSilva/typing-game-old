@@ -1,21 +1,39 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
-</head>
-<body>
- <p>Hello world!</p> 
- <input id="input" placeholder="Digita ai..." />
-</body>
-<script>
-  const websocket = new WebSocket("ws://127.0.0.1:3333/games/join?id=6dedfbf9-5fe1-4773-87a8-b70803ea559e")
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <p>Hello world!</p>
+    <input id="input" placeholder="Digita ai..." />
+  </body>
+  <script>
+    const websocket = new WebSocket(
+      "ws://127.0.0.1:3333/games/join?id=b0d0d32f-2d65-44f1-b41d-9ada08e6b562&player=teste",
+    );
 
-  const input = document.getElementById("input")
+    const reader = new FileReader();
+    reader.addEventListener("loadend", () => {
+      const buff = reader.result;
 
-  input.addEventListener("input", (event) => {
-    websocket.send(event.target.value)
-  })
-</script>
+      const str = new TextDecoder().decode(buff);
+      const json = JSON.parse(str);
+
+      console.log(json);
+    });
+
+    websocket.onmessage = (event) => {
+      reader.readAsArrayBuffer(event.data);
+
+      console.log(event.data);
+    };
+
+    const input = document.getElementById("input");
+
+    input.addEventListener("input", (event) => {
+      websocket.send(event.target.value);
+    });
+  </script>
 </html>
