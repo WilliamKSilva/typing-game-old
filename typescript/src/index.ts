@@ -22,9 +22,17 @@ websocket.on("connection", (socket, req) => {
   let full_url = `http://127.0.0.1:3333${req.url}`;
   const url = new URL(full_url);
   const game_id = url.searchParams.get("id");
+  const player_name = url.searchParams.get("player");
   socket.on("error", console.error);
 
   if (!game_id) {
+    console.log("socket: closed");
+    socket.terminate();
+    return;
+  }
+
+  if (!player_name) {
+    console.log("socket: closed");
     socket.terminate();
     return;
   }
@@ -41,14 +49,27 @@ websocket.on("connection", (socket, req) => {
     let buff = "";
     buff += data;
 
-    game.player_one.buff = buff;
+    const [player, opponent] = games.find_player_and_opponent(
+      player_name,
+      game_id,
+    );
+
+    if (!player) {
+      socket.terminate();
+      return;
+    }
+
+    if (!opponent) {
+      socket.terminate();
+      return;
+    }
+
+    player.buff = buff
   });
 });
 
 server.on("upgrade", (request, socket, head) => {
   const { pathname } = parse(request.url!);
-
-  console.log("pathname", pathname);
 
   if (pathname == "/games/join") {
     websocket.handleUpgrade(request, socket, head, function done(ws) {

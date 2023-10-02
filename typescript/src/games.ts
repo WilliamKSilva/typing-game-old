@@ -1,16 +1,15 @@
 import { v4 as uuid } from "uuid";
 
+type Player = {
+  name: string;
+  buff: string;
+};
+
 type Game = {
   id: string;
   name: string;
-  player_one: {
-    name: string;
-    buff: string;
-  };
-  player_two: {
-    name: string;
-    buff: string;
-  };
+  player_one: Player;
+  player_two: Player;
 };
 
 export default class Games {
@@ -32,10 +31,27 @@ export default class Games {
 
     this.running.push(game);
 
-    return game
+    return game;
   }
 
   public find_by_id(id: string): Game | undefined {
-    return this.running.find((game) => game.id === id)
+    return this.running.find((game) => game.id === id);
+  }
+
+  public find_player_and_opponent(
+    name: string,
+    game_id: string,
+  ): [Player | null, Player | null] {
+    const game = this.running.find((game) => game.id === game_id);
+
+    if (!game) {
+      return [null, null];
+    }
+
+    if (game.player_one.name === name) {
+      return [game.player_one, game.player_two];
+    } else {
+      return [game.player_two, game.player_one];
+    }
   }
 }
