@@ -7,6 +7,8 @@ type NewGameData = {
   player: string;
 };
 
+type ResponseData = Record<string, unknown> | null 
+
 export default class Http {
   constructor(
     private req: IncomingMessage,
@@ -38,7 +40,7 @@ export default class Http {
   }
 
   // Bad name, but makes sense I think
-  public redirect() {
+  public redirect<T>(response: (response_data: ResponseData) => void) {
     if (!this.req.url) {
       throw new InternalServerError()
     }
@@ -55,12 +57,14 @@ export default class Http {
           }
 
           const data = JSON.parse(body) as NewGameData;
-          this.games.create(data.name, data.player);
+          const created_game = this.games.create(data.name, data.player);
 
-          return;
+          response(created_game)
         });
 
         break;
+      default:
+        response(null)
     }
   }
 }
