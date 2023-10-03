@@ -1,13 +1,19 @@
 import http from "node:http";
 import { parse } from "url";
-import { WebSocketServer } from "ws";
 import Games from "./games";
 import Http from "./http";
+import Websocket from "./websocket";
+
+// The callbacks are "async" code so I think that race conditions can happen
+// I want to know how much data this shitty array can hold before starts lagging
+// the whole thing
+let games = new Games();
 
 const server = http.createServer();
-const websocket = new WebSocketServer({
-  noServer: true,
-});
+// const websocket = new WebSocketServer({
+//   noServer: true,
+// });
+const websocket = new Websocket(games)
 
 const port = 3333;
 
@@ -15,73 +21,11 @@ server.listen(port, () => {
   console.log(`Server listening on port: ${port}`);
 });
 
-// The callbacks are "async" code so I think that race conditions can happen
-let games = new Games();
-
-// TODO try to move Websocket event's to Websocket class
-websocket.on("connection", (socket, req) => {
-  let full_url = `http://127.0.0.1:3333${req.url}`;
-  const url = new URL(full_url);
-  const game_id = url.searchParams.get("id");
-  const player_name = url.searchParams.get("player");
-  socket.on("error", console.error);
-
-  if (!game_id) {
-    console.log("socket: closed");
-    socket.terminate();
-    return;
-  }
-
-  if (!player_name) {
-    console.log("socket: closed");
-    socket.terminate();
-    return;
-  }
-
-  const game = games.find_by_id(game_id);
-
-  if (!game) {
-    console.log("socket: closed");
-    socket.terminate();
-    return;
-  }
-
-  socket.on("message", (data) => {
-    let buff = "";
-    buff += data;
-
-    const [player, opponent] = games.find_player_and_opponent(
-      player_name,
-      game_id,
-    );
-
-    if (!player) {
-      socket.terminate();
-      return;
-    }
-
-    if (!opponent) {
-      socket.terminate();
-      return;
-    }
-
-    player.buff = buff
-
-    const state = {
-      opponent: opponent.buff
-    }
-
-    socket.send(Buffer.from(JSON.stringify(state)))
-  });
-});
-
 server.on("upgrade", (request, socket, head) => {
   const { pathname } = parse(request.url!);
 
   if (pathname == "/games/join") {
-    websocket.handleUpgrade(request, socket, head, function done(ws) {
-      websocket.emit("connection", ws, request);
-    });
+    websocket.handleSocketUpgrade(request, socket, head)
 
     return;
   }
