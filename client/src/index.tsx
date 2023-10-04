@@ -17,9 +17,7 @@ render(
   () => (
     <Router>
       <Routes>
-        <Route path="/" component={App}>
-          <App />
-        </Route>
+        <Route path="/" component={App} />
       </Routes>
     </Router>
   ), root!,
