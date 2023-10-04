@@ -2,7 +2,6 @@
 .button {
   border: none;
   color: white;
-  padding: 15px 32px;
   text-align: center;
   text-decoration: none;
   display: inline-block;
@@ -17,4 +16,12 @@
 .secondary {
   background-color: transparent;
   border: 1px solid #424242;
+}
+
+.large {
+  padding: 15px 32px;
+}
+
+.medium {
+  padding: 10px 30px;
 }

@@ -1,7 +1,7 @@
 import type { Component } from "solid-js";
 import "./App.css";
 
-import { Button } from "./components/Button";
+import { Button, ButtonSize, ButtonType } from "./components/Button";
 
 const App: Component = () => {
   const newGame = async () => {
@@ -19,8 +19,20 @@ const App: Component = () => {
     <div class="wrapper">
       <main>
         <div class="main-content">
-          <Button description="New game" primary={true} onClick={() => newGame()} />
-          <Button description="Enter game" primary={false} onClick={() => console.log("teste")}/>
+          <Button
+            description="New game"
+            size={ButtonSize.large}
+            type={ButtonType.button}
+            primary={true}
+            onClick={() => newGame()}
+          />
+          <Button
+            description="Enter game"
+            size={ButtonSize.large}
+            type={ButtonType.button}
+            primary={false}
+            onClick={() => console.log("teste")}
+          />
         </div>
       </main>
     </div>

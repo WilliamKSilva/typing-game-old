@@ -4,6 +4,7 @@ import { render } from 'solid-js/web';
 import { Route, Router, Routes } from '@solidjs/router';
 import App from './App';
 import './index.css';
+import { GameCreation } from './pages/GameCreation';
 
 const root = document.getElementById('root');
 
@@ -18,6 +19,7 @@ render(
     <Router>
       <Routes>
         <Route path="/" component={App} />
+        <Route path="/game" component={GameCreation} />
       </Routes>
     </Router>
   ), root!,
