@@ -1,39 +1,16 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <link rel="shortcut icon" type="image/ico" href="/src/assets/favicon.ico" />
+    <title>Solid App</title>
   </head>
   <body>
-    <p>Hello world!</p>
-    <input id="input" placeholder="Digita ai..." />
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+
+    <script src="/src/index.tsx" type="module"></script>
   </body>
-  <script>
-    const websocket = new WebSocket(
-      "ws://127.0.0.1:3333/games/join?id=b0d0d32f-2d65-44f1-b41d-9ada08e6b562&player=teste",
-    );
-
-    const reader = new FileReader();
-    reader.addEventListener("loadend", () => {
-      const buff = reader.result;
-
-      const str = new TextDecoder().decode(buff);
-      const json = JSON.parse(str);
-
-      console.log(json);
-    });
-
-    websocket.onmessage = (event) => {
-      reader.readAsArrayBuffer(event.data);
-
-      console.log(event.data);
-    };
-
-    const input = document.getElementById("input");
-
-    input.addEventListener("input", (event) => {
-      websocket.send(event.target.value);
-    });
-  </script>
 </html>
