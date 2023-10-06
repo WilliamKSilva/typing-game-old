@@ -5,14 +5,14 @@ import { default as Games } from "./games";
 
 export default class Websocket {
   private server: Server;
-  private games: Games
+  private games: Games;
 
   constructor(games: Games) {
     this.server = new WebSocketServer({
       noServer: true,
     });
 
-    this.games = games
+    this.games = games;
 
     this.handleClientConnection();
   }
@@ -39,6 +39,25 @@ export default class Websocket {
 
       const game = this.games.find_by_id(game_id);
 
+      const [player, opponent] = this.games.find_player_and_opponent(
+        player_name,
+        game_id,
+      );
+
+      if (!player) {
+        socket.terminate();
+        return;
+      }
+
+      if (!opponent) {
+        socket.terminate();
+        return;
+      }
+
+      setTimeout(() => {
+        this.games.update_opponent_state(opponent, socket);
+      }, 3000);
+
       if (!game) {
         console.log("socket: closed");
         socket.terminate();
@@ -49,32 +68,23 @@ export default class Websocket {
         let buff = "";
         buff += data;
 
-        const [player, opponent] = this.games.find_player_and_opponent(
-          player_name,
-          game_id,
-        );
-
-        if (!player) {
-          socket.terminate();
-          return;
-        }
-
-        if (!opponent) {
-          socket.terminate();
-          return;
-        }
-
         const state = {
           opponent: opponent.buff,
         };
 
         socket.send(Buffer.from(JSON.stringify(state)));
+
+        return;
       });
     });
   }
 
-  public handleSocketUpgrade(request: IncomingMessage, socket: internal.Duplex, head: Buffer) {
-    const ws_server = this.server
+  public handleSocketUpgrade(
+    request: IncomingMessage,
+    socket: internal.Duplex,
+    head: Buffer,
+  ) {
+    const ws_server = this.server;
     ws_server.handleUpgrade(request, socket, head, function done(ws) {
       ws_server.emit("connection", ws, request);
     });

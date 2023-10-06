@@ -1,4 +1,5 @@
 import { v4 as uuid } from "uuid";
+import WebSocket from "ws";
 
 type Player = {
   name: string;
@@ -53,5 +54,15 @@ export default class Games {
     } else {
       return [game.player_two, game.player_one];
     }
+  }
+
+  public update_opponent_state(opponent: Player, socket: WebSocket) {
+    const state = {
+      opponent: opponent.buff,
+    };
+
+    socket.send(Buffer.from(JSON.stringify(state)));
+
+    return;
   }
 }
