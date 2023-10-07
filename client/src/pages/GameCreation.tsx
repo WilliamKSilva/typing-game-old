@@ -1,25 +1,18 @@
 import axios from "axios";
-import { createSignal } from "solid-js";
+import { Component, Setter, createSignal } from "solid-js";
 import { Button, ButtonSize, ButtonType } from "../components/Button";
 import { Input } from "../components/Input";
 import "./GameCreation.css";
 
 import { FaSolidArrowLeft } from "solid-icons/fa";
+import { GameData } from "../types/game_data";
 
-type GameData = {
-  id: string
-  player_one: string
-  player_two: string
+type GameCreationProps = {
+  setGameData: Setter<GameData>
 }
 
-export function GameCreation() {
+export const GameCreation: Component<GameCreationProps> = (props) => {
   const [loading, setLoading] = createSignal(false)
-
-  const [gameData, setGameData] = createSignal<GameData>({
-    id: '',
-    player_one: '',
-    player_two: ''
-  })
 
   const onFormSubmit = async (event: any) => {
     event.preventDefault();
@@ -35,7 +28,7 @@ export function GameCreation() {
       setLoading(true)
       const response = await axios.post(url, JSON.stringify(newGameData))
 
-      setGameData(response.data)
+      props.setGameData(response.data)
     } catch (error) {
       console.log(error)
       setLoading(false)

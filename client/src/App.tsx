@@ -25,6 +25,7 @@ const App: Component = () => {
             type={ButtonType.button}
             primary={true}
             onClick={() => newGame()}
+            loading={false}
           />
           <Button
             description="Enter game"
@@ -32,6 +33,7 @@ const App: Component = () => {
             type={ButtonType.button}
             primary={false}
             onClick={() => console.log("teste")}
+            loading={false}
           />
         </div>
       </main>
