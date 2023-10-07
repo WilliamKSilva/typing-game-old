@@ -9,11 +9,12 @@ import Websocket from "./websocket";
 // the whole thing
 let games = new Games();
 
-const server = http.createServer();
+const server = http.createServer()
+  
 // const websocket = new WebSocketServer({
 //   noServer: true,
 // });
-const websocket = new Websocket(games)
+const websocket = new Websocket(games);
 
 const port = 3333;
 
@@ -25,7 +26,7 @@ server.on("upgrade", (request, socket, head) => {
   const { pathname } = parse(request.url!);
 
   if (pathname == "/games/join") {
-    websocket.handleSocketUpgrade(request, socket, head)
+    websocket.handleSocketUpgrade(request, socket, head);
 
     return;
   }
@@ -39,6 +40,8 @@ server.on("error", (err) => {
 });
 
 server.on("request", (req, res) => {
+  res.setHeader("Access-Control-Allow-Origin", "*")
+  res.setHeader("Access-Control-Allow-Method", "OPTIONS, GET, POST")
   const http = new Http(req, res, games);
   try {
     http.redirect((response_data) => {
