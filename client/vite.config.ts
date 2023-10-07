@@ -1,6 +1,9 @@
+import dotenv from 'dotenv';
 import { defineConfig } from 'vite';
 import solidPlugin from 'vite-plugin-solid';
 // import devtools from 'solid-devtools/vite';
+
+dotenv.config()
 
 export default defineConfig({
   plugins: [
