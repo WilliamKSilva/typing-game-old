@@ -13,9 +13,12 @@ export const Game: Component<GameProps> = (props) => {
   const params = useParams()
 
   onMount(() => {
-    const url = `${import.meta.env.VITE_APP_SERVER_URL}/games/join?id=${params.id}&player=${props.gameData().player_one}`;
+    console.log(props.gameData())
+    console.log(params.id)
 
-    const websocket = new WebSocket(url) 
+    // const url = `${import.meta.env.VITE_APP_SERVER_URL}/games/join?id=${params.id}&player=${props.gameData().player_one}`;
+
+    // const websocket = new WebSocket(url) 
   })
 
   return (

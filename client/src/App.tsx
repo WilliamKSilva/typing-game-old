@@ -1,19 +1,11 @@
 import type { Component } from "solid-js";
 import "./App.css";
 
+import { useNavigate } from "@solidjs/router";
 import { Button, ButtonSize, ButtonType } from "./components/Button";
 
 const App: Component = () => {
-  const newGame = async () => {
-    const url = `${process.env.VITE_APP_SERVER_URL}/games`;
-    const gameData = {
-      name: "",
-      player: "",
-    };
-    const response = await fetch(url, {
-      body: JSON.stringify(gameData),
-    });
-  };
+  const navigate = useNavigate() 
 
   return (
     <div class="wrapper">
@@ -24,7 +16,7 @@ const App: Component = () => {
             size={ButtonSize.large}
             type={ButtonType.button}
             primary={true}
-            onClick={() => newGame()}
+            onClick={() => navigate("/game")}
             loading={false}
           />
           <Button

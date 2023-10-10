@@ -4,15 +4,18 @@ import { Button, ButtonSize, ButtonType } from "../components/Button";
 import { Input } from "../components/Input";
 import "./GameCreation.css";
 
+import { useNavigate } from "@solidjs/router";
 import { FaSolidArrowLeft } from "solid-icons/fa";
 import { GameData } from "../types/game_data";
 
 type GameCreationProps = {
-  setGameData: Setter<GameData>
-}
+  setGameData: Setter<GameData>;
+};
 
 export const GameCreation: Component<GameCreationProps> = (props) => {
-  const [loading, setLoading] = createSignal(false)
+  const navigate = useNavigate();
+
+  const [loading, setLoading] = createSignal(false);
 
   const onFormSubmit = async (event: any) => {
     event.preventDefault();
@@ -25,13 +28,19 @@ export const GameCreation: Component<GameCreationProps> = (props) => {
     };
 
     try {
-      setLoading(true)
-      const response = await axios.post(url, JSON.stringify(newGameData))
+      setLoading(true);
+      const response = await axios.post(url, JSON.stringify(newGameData));
 
-      props.setGameData(response.data)
+      const responseData = response.data as GameData;
+
+      props.setGameData(responseData);
+
+      setLoading(false);
+
+      navigate(`/game/${responseData.id}`);
     } catch (error) {
-      console.log(error)
-      setLoading(false)
+      console.log(error);
+      setLoading(false);
     }
   };
 
@@ -66,4 +75,4 @@ export const GameCreation: Component<GameCreationProps> = (props) => {
       </div>
     </div>
   );
-}
+};
