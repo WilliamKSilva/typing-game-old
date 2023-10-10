@@ -1,4 +1,10 @@
+type Player = {
+  name: string
+  buff: string
+}
+
 export type GameData = {
   id: string
-  player_one: string
+  player: Player
+  opponent: Player 
 }

@@ -20,7 +20,14 @@ if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
 
 const [gameData, setGameData] = createSignal<GameData>({
   id: '',
-  player_one: ''
+  player: {
+    name: '',
+    buff: ''
+  },
+  opponent: {
+    name: '',
+    buff: ''
+  }
 })
 
 render(

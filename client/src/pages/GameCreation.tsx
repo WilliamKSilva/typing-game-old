@@ -21,7 +21,7 @@ export const GameCreation: Component<GameCreationProps> = (props) => {
     event.preventDefault();
     const data = new FormData(event.target);
 
-    const url = `${import.meta.env.VITE_APP_SERVER_URL}/games/new`;
+    const url = `${import.meta.env.VITE_APP_HTTP_SERVER_URL}/games/new`;
     const newGameData = {
       name: data.get("name"),
       player: data.get("player"),

@@ -32,7 +32,13 @@ export default class Games {
 
     this.running.push(game);
 
-    return game;
+    const game_data = {
+      id: game.id,
+      player: game.player_one,
+      opponent: game.player_two
+    }
+
+    return game_data;
   }
 
   public find_by_id(id: string): Game | undefined {
