@@ -35,7 +35,7 @@ render(
     <Router>
       <GameContext.Provider value={[gameData, setGameData]}>
         <Routes>
-          <Route path="/" element={<App />} />
+          <Route path="/" element={<App setGameData={setGameData} />} />
           <Route path="/game" element={<GameCreation setGameData={setGameData} />} />
           <Route path="/game/:id" element={<Game gameData={gameData} setGameData={setGameData} />} />
         </Routes>

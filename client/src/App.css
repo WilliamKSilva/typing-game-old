@@ -15,3 +15,11 @@ main {
   gap: 4rem;
   margin-top: 15rem;
 }
+
+.join-game {
+  display: flex;
+  width: 20%;
+  gap: 4rem;
+  margin-top: 15rem;
+  flex-direction: column;
+}
