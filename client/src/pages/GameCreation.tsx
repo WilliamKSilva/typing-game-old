@@ -49,15 +49,17 @@ export const GameCreation: Component<GameCreationProps> = (props) => {
       <div class="content-wrapper">
         <div class="content">
           <div class="form-header">
-            <FaSolidArrowLeft size={25} color="white" />
+            <div class="arrow-left">
+              <FaSolidArrowLeft size={25} color="white" onClick={() => navigate("/")} />
+            </div>
             <span class="form-header-title">Create a new game</span>
           </div>
           <form class="form" onSubmit={(event) => onFormSubmit(event)}>
             <div class="form-input-wrapper">
-              <Input name="name" placeholder="Game name" onChange={() => {}} />
+              <Input name="name" placeholder="Game name" onChange={() => {}} disabled={false} />
             </div>
             <div class="form-input-wrapper">
-              <Input name="player" placeholder="Your nickname" onChange={() => {}} />
+              <Input name="player" placeholder="Your nickname" onChange={() => {}} disabled={false} />
             </div>
 
             <div class="form-input-button-wrapper">

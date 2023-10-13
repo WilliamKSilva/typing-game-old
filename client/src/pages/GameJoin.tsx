@@ -55,18 +55,21 @@ export const GameJoin: Component<GameJoinProps> = (props) => {
       <div class="content-wrapper">
         <div class="content">
           <div class="form-header">
-            <FaSolidArrowLeft size={25} color="white" />
+            <div class="arrow-left">
+              <FaSolidArrowLeft size={25} color="white" onClick={() => navigate("/")} />
+            </div>
             <span class="form-header-title">Join an existing Game</span>
           </div>
           <form class="form" onSubmit={(event) => joinExistingGame(event)}>
             <div class="form-input-wrapper">
-              <Input name="name" placeholder="Game name" onChange={() => {}} />
+              <Input name="name" placeholder="Game name" onChange={() => {}} disabled={false} />
             </div>
             <div class="form-input-wrapper">
               <Input
                 name="player"
                 placeholder="Your nickname"
                 onChange={() => {}}
+                disabled={false}
               />
             </div>
 
