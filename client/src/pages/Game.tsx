@@ -26,7 +26,6 @@ export const Game: Component<GameProps> = (props) => {
   createEffect(() => {
     if (websocket) {
       websocket.onmessage = (event) => {
-        console.log(event);
         readBlob(event.data, (result) => {
           if (result) {
             const data = JSON.parse(result as string) as GameData;

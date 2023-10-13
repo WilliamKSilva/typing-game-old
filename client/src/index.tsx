@@ -8,6 +8,7 @@ import { GameContext } from "./contexts/game_context";
 import "./index.css";
 import { Game } from "./pages/Game";
 import { GameCreation } from "./pages/GameCreation";
+import { GameJoin } from "./pages/GameJoin";
 import { GameData } from "./types/game_data";
 
 const root = document.getElementById("root");
@@ -35,8 +36,9 @@ render(
     <Router>
       <GameContext.Provider value={[gameData, setGameData]}>
         <Routes>
-          <Route path="/" element={<App setGameData={setGameData} />} />
+          <Route path="/" element={<App />} />
           <Route path="/game" element={<GameCreation setGameData={setGameData} />} />
+          <Route path="/game-join" element={<GameJoin setGameData={setGameData} />} />
           <Route path="/game/:id" element={<Game gameData={gameData} setGameData={setGameData} />} />
         </Routes>
       </GameContext.Provider>
