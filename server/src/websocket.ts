@@ -54,23 +54,24 @@ export default class Websocket {
         return;
       }
 
-      // setTimeout(() => {
-      //   this.games.update_opponent_state(opponent, socket);
-      // }, 3000);
-
       if (!game) {
         console.log("socket: closed");
         socket.terminate();
         return;
       }
 
-      const game_data = {
-        id: game.id,
-        player,
-        opponent
-      }
+      // If its the player first connection saves his socket 
+      this.games.update_player_socket(player, socket)
 
-      socket.send(Buffer.from(JSON.stringify(game_data)))
+
+      // If game_state returns an value the game has the two players connected
+      const game_state = this.games.game_state(game, player, opponent)
+
+      // If game is ready send the state to the two players 
+      if (game_state) {
+        opponent.socket?.send(Buffer.from(JSON.stringify(game_state)))
+        player.socket?.send(Buffer.from(JSON.stringify(game_state)))
+      }
 
       socket.on("message", (data) => {
         let buff = "";

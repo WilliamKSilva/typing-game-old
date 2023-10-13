@@ -4,6 +4,7 @@ import WebSocket from "ws";
 export type Player = {
   name: string;
   buff: string;
+  socket: WebSocket | null
 };
 
 type Game = {
@@ -16,17 +17,19 @@ type Game = {
 export default class Games {
   public running: Game[] = [];
 
-  public create(name: string, player: string) {
-    const game = {
+  public create(name: string, socket: WebSocket) {
+    const game: Game = {
       id: uuid(),
       name,
       player_one: {
         name,
         buff: "",
+        socket
       },
       player_two: {
         name: "",
         buff: "",
+        socket: null 
       },
     };
 
@@ -35,20 +38,26 @@ export default class Games {
     const game_data = {
       id: game.id,
       player: game.player_one,
-      opponent: game.player_two
-    }
+      opponent: game.player_two,
+    };
 
     return game_data;
+  }
+
+  public update_player_socket(player: Player, socket: WebSocket) {
+    if (!player.socket) {
+      player.socket = socket
+    }
   }
 
   public find_by_id(id: string): Game | null {
     const game = this.running.find((game) => game.id === id);
 
     if (!game) {
-      return null
+      return null;
     }
 
-    return game
+    return game;
   }
 
   public find_player_and_opponent(
@@ -68,6 +77,29 @@ export default class Games {
     }
   }
 
+  public game_state(game: Game, player: Player, opponent: Player) {
+    if (opponent.name) {
+      const game_state = {
+        id: game.id,
+        player: {
+          name: player.name,
+          buff: player.buff
+        },
+        opponent: {
+          name: opponent.name,
+          buff: opponent.buff
+        },
+      }
+
+      return game_state
+    }
+
+    return null
+  }
+
+  // I think that is bad to pass the socket instance to the Games class
+  // Will refactor later
+
   public update_opponent_state(opponent: Player, socket: WebSocket) {
     const state = {
       opponent: opponent.buff,
@@ -77,4 +109,15 @@ export default class Games {
 
     return;
   }
+
+  // public check_game_ready(game: Game, player: Player, opponent: Player, socket: WebSocket) {
+  //   const game_state = this.game_state(game, player, opponent)
+  //   if (opponent?.name !== "" && !game?.ready) {
+  //     game.ready = true;
+
+  //     socket.send(Buffer.from(JSON.stringify(game_state)));
+  //   } else {
+  //     socket.send(Buffer.from(JSON.stringify(game_state)));
+  //   }
+  // }
 }
