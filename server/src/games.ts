@@ -1,7 +1,7 @@
 import { v4 as uuid } from "uuid";
 import WebSocket from "ws";
 
-type Player = {
+export type Player = {
   name: string;
   buff: string;
 };
@@ -41,8 +41,14 @@ export default class Games {
     return game_data;
   }
 
-  public find_by_id(id: string): Game | undefined {
-    return this.running.find((game) => game.id === id);
+  public find_by_id(id: string): Game | null {
+    const game = this.running.find((game) => game.id === id);
+
+    if (!game) {
+      return null
+    }
+
+    return game
   }
 
   public find_player_and_opponent(

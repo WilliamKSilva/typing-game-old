@@ -54,9 +54,9 @@ export default class Websocket {
         return;
       }
 
-      setTimeout(() => {
-        this.games.update_opponent_state(opponent, socket);
-      }, 3000);
+      // setTimeout(() => {
+      //   this.games.update_opponent_state(opponent, socket);
+      // }, 3000);
 
       if (!game) {
         console.log("socket: closed");
@@ -64,9 +64,21 @@ export default class Websocket {
         return;
       }
 
+      const game_data = {
+        id: game.id,
+        player,
+        opponent
+      }
+
+      socket.send(Buffer.from(JSON.stringify(game_data)))
+
       socket.on("message", (data) => {
         let buff = "";
         buff += data;
+
+        console.log(buff)
+
+        player.buff = buff 
 
         const state = {
           opponent: opponent.buff,

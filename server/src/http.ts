@@ -1,11 +1,22 @@
 import { IncomingMessage, ServerResponse } from "http";
 import { InternalServerError, NotFoundError } from "./exceptions";
-import Games from "./games";
+import Games, { Player } from "./games";
 
 type NewGameData = {
   name: string;
   player: string;
 };
+
+type FindGameData = {
+  game_id: string;
+  player: string;
+};
+
+type GameStateData = {
+  id: string
+  player: Player
+  opponent: Player
+}
 
 type ResponseData = Record<string, unknown> | null;
 
@@ -14,7 +25,7 @@ export default class Http {
     private req: IncomingMessage,
     private res: ServerResponse,
     private games: Games,
-    private routes: string[] = ["/games/new"],
+    private routes: string[] = ["/games/new", "/games/update"],
   ) {}
 
   private body(callback: (msg: string) => void) {
@@ -40,7 +51,7 @@ export default class Http {
   }
 
   // Bad name, but makes sense I think
-public redirect<T>(response: (response_data: ResponseData) => void) {
+  public redirect(response: (response_data: ResponseData) => void) {
     if (!this.req.url) {
       throw new InternalServerError();
     }
@@ -50,6 +61,37 @@ public redirect<T>(response: (response_data: ResponseData) => void) {
     }
 
     switch (this.req.url) {
+      case "/games/update":
+        this.body((body) => {
+          if (!body) {
+            throw new Error("Empty body");
+          }
+
+          const data = JSON.parse(body) as FindGameData;
+
+          const game = this.games.find_by_id(data.game_id);
+
+          if (!game) {
+            response(null)
+
+            return
+          }
+
+          game.player_two = {
+            name: data.player,
+            buff: ""
+          } 
+
+          const game_data: GameStateData = {
+            id: game.id,
+            player: game.player_one,
+            opponent: game.player_one
+          }
+
+          response(game_data);
+        });
+
+        break;
       case "/games/new":
         this.body((body) => {
           if (!body) {
