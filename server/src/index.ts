@@ -2,12 +2,15 @@ import http from "node:http";
 import { parse } from "url";
 import Games from "./games";
 import Http from "./http";
+import TextGenerator from "./services/random_text";
 import Websocket from "./websocket";
+
+const textGenerator = new TextGenerator()
 
 // The callbacks are "async" code so I think that race conditions can happen
 // I want to know how much data this shitty array can hold before starts lagging
 // the whole thing
-let games = new Games();
+let games = new Games(textGenerator);
 
 const server = http.createServer()
   

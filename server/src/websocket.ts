@@ -14,6 +14,7 @@ export default class Websocket {
 
     this.games = games;
 
+    // Start listening to connections
     this.handleClientConnection();
   }
 
@@ -60,7 +61,7 @@ export default class Websocket {
         return;
       }
 
-      // If its the player first connection saves his socket 
+      // If is the player first connection saves his socket 
       this.games.update_player_socket(player, socket)
 
 

@@ -1,6 +1,6 @@
 import { IncomingMessage, ServerResponse } from "http";
 import { InternalServerError, NotFoundError } from "./exceptions";
-import Games, { Player } from "./games";
+import Games, { GameState } from "./games";
 
 type NewGameData = {
   name: string;
@@ -11,12 +11,6 @@ type FindGameData = {
   game_id: string;
   player: string;
 };
-
-type GameStateData = {
-  id: string
-  player: Player
-  opponent: Player
-}
 
 type ResponseData = Record<string, unknown> | null;
 
@@ -79,11 +73,13 @@ export default class Http {
 
           game.player_two = {
             name: data.player,
-            buff: ""
+            buff: "",
+            socket: null
           } 
 
-          const game_data: GameStateData = {
+          const game_data: GameState = {
             id: game.id,
+            match_text: game.match_text,
             player: game.player_one,
             opponent: game.player_one
           }

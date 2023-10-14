@@ -1,35 +1,46 @@
 import { v4 as uuid } from "uuid";
 import WebSocket from "ws";
+import { TextGeneratorContract } from "./services/random_text";
 
 export type Player = {
   name: string;
   buff: string;
-  socket: WebSocket | null
+  socket: WebSocket | null;
 };
 
 type Game = {
   id: string;
   name: string;
+  match_text: string;
   player_one: Player;
   player_two: Player;
 };
 
+export type GameState = {
+  id: string
+  match_text: string
+  player: Omit<Player, "socket"> 
+  opponent: Omit<Player, "socket"> 
+}
+
 export default class Games {
+  constructor(private textGenerator: TextGeneratorContract) {}
   public running: Game[] = [];
 
-  public create(name: string, socket: WebSocket) {
+  public create(name: string, player: string) {
     const game: Game = {
       id: uuid(),
       name,
+      match_text: this.textGenerator.random(),
       player_one: {
-        name,
+        name: player,
         buff: "",
-        socket
+        socket: null,
       },
       player_two: {
         name: "",
         buff: "",
-        socket: null 
+        socket: null,
       },
     };
 
@@ -46,7 +57,7 @@ export default class Games {
 
   public update_player_socket(player: Player, socket: WebSocket) {
     if (!player.socket) {
-      player.socket = socket
+      player.socket = socket;
     }
   }
 
@@ -79,22 +90,23 @@ export default class Games {
 
   public game_state(game: Game, player: Player, opponent: Player) {
     if (opponent.name) {
-      const game_state = {
+      const game_state: GameState = {
         id: game.id,
+        match_text: game.match_text,
         player: {
           name: player.name,
-          buff: player.buff
+          buff: player.buff,
         },
         opponent: {
           name: opponent.name,
-          buff: opponent.buff
+          buff: opponent.buff,
         },
-      }
+      };
 
-      return game_state
+      return game_state;
     }
 
-    return null
+    return null;
   }
 
   // I think that is bad to pass the socket instance to the Games class
