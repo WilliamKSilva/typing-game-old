@@ -68,9 +68,9 @@ export const Game: Component<GameProps> = (props) => {
       <div class="game-content">
         <div class="players-area">
           <div class="player">
-            <strong class="player-name">William</strong>
+            <strong class="player-name">{props.gameData().player.name}</strong>
             <strong class="game-text">
-              sauhduiahduiaidh aiudhi haisdhiahd iahi ahuid aia
+              {props.gameData().match_text}
             </strong>
             <div class="game-text-input-wrapper">
               <Input
@@ -90,9 +90,9 @@ export const Game: Component<GameProps> = (props) => {
             </Match>
             <Match when={!opponentLoading()}>
               <div class="player">
-                <strong class="player-name">William</strong>
+                <strong class="player-name">{props.gameData().opponent.name}</strong>
                 <strong class="game-text">
-                  sauhduiahduiaidh aiudhi haisdhiahd iahi ahuid aia
+                  {props.gameData().match_text}
                 </strong>
                 <div class="game-text-input-wrapper">
                   <Input
