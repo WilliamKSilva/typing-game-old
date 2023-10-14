@@ -88,9 +88,9 @@ export default class Games {
     }
   }
 
-  public game_state(game: Game, player: Player, opponent: Player) {
+  public game_state(game: Game, player: Player, opponent: Player): [GameState | null, GameState | null] {
     if (opponent.name) {
-      const game_state: GameState = {
+      const player_state: GameState = {
         id: game.id,
         match_text: game.match_text,
         player: {
@@ -103,10 +103,23 @@ export default class Games {
         },
       };
 
-      return game_state;
+      const opponent_state: GameState = {
+        id: game.id,
+        match_text: game.match_text,
+        player: {
+          name: opponent.name,
+          buff: opponent.buff,
+        },
+        opponent: {
+          name: player.name,
+          buff: player.buff,
+        },
+      };
+
+      return [player_state, opponent_state]
     }
 
-    return null;
+    return [null, null];
   }
 
   // I think that is bad to pass the socket instance to the Games class

@@ -66,12 +66,15 @@ export default class Websocket {
 
 
       // If game_state returns an value the game has the two players connected
-      const game_state = this.games.game_state(game, player, opponent)
+      const [player_state, opponent_state] = this.games.game_state(game, player, opponent)
+
+      console.log("player_state", player_state)
+      console.log("opponent_state", opponent_state)
 
       // If game is ready send the state to the two players 
-      if (game_state) {
-        opponent.socket?.send(Buffer.from(JSON.stringify(game_state)))
-        player.socket?.send(Buffer.from(JSON.stringify(game_state)))
+      if (player_state && opponent_state) {
+        opponent.socket?.send(Buffer.from(JSON.stringify(opponent_state)))
+        player.socket?.send(Buffer.from(JSON.stringify(player_state)))
       }
 
       socket.on("message", (data) => {
