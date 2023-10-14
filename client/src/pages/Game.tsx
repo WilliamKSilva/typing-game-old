@@ -2,9 +2,8 @@ import { useParams } from "@solidjs/router";
 import {
   Accessor,
   Component,
-  Match,
   Setter,
-  Switch,
+  Show,
   createEffect,
   createSignal,
   onMount,
@@ -48,9 +47,8 @@ export const Game: Component<GameProps> = (props) => {
 
             if (data.opponent.name) {
               setOpponentLoading(false);
+              props.setGameData(data)
             }
-
-            console.log(data);
           }
         });
       };
@@ -69,9 +67,7 @@ export const Game: Component<GameProps> = (props) => {
         <div class="players-area">
           <div class="player">
             <strong class="player-name">{props.gameData().player.name}</strong>
-            <strong class="game-text">
-              {props.gameData().match_text}
-            </strong>
+            <strong class="game-text">{props.gameData().match_text}</strong>
             <div class="game-text-input-wrapper">
               <Input
                 placeholder="Start typing..."
@@ -81,32 +77,28 @@ export const Game: Component<GameProps> = (props) => {
               />
             </div>
           </div>
-          <Switch>
-            <Match when={opponentLoading()}>
-              <div class="loading-player">
-                <p class="loading-player-text">Waiting player connect...</p>
-                <Loading />
+          <Show when={opponentLoading()}>
+            <div class="loading-player">
+              <p class="loading-player-text">Waiting player connect...</p>
+              <Loading />
+            </div>
+          </Show>
+          <Show when={opponentLoading() === false}>
+            <div class="player">
+              <strong class="player-name">
+                {props.gameData().opponent.name}
+              </strong>
+              <strong class="game-text">{props.gameData().match_text}</strong>
+              <div class="game-text-input-wrapper">
+                <Input
+                  placeholder="Start typing..."
+                  name="player"
+                  onChange={(event) => sendWebsocketMessage(event.target.value)}
+                  disabled={true}
+                />
               </div>
-            </Match>
-            <Match when={!opponentLoading()}>
-              <div class="player">
-                <strong class="player-name">{props.gameData().opponent.name}</strong>
-                <strong class="game-text">
-                  {props.gameData().match_text}
-                </strong>
-                <div class="game-text-input-wrapper">
-                  <Input
-                    placeholder="Start typing..."
-                    name="player"
-                    onChange={(event) =>
-                      sendWebsocketMessage(event.target.value)
-                    }
-                    disabled={true}
-                  />
-                </div>
-              </div>
-            </Match>
-          </Switch>
+            </div>
+          </Show>
         </div>
       </div>
     </div>
