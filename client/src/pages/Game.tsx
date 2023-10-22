@@ -24,6 +24,17 @@ type TextSplited = {
   final: string;
 };
 
+type InvalidInput = {
+  invalid: boolean
+  index: number
+}
+
+enum TextInputType {
+  wrong = "wrong",
+  right = "right",
+  invalid = "invalid",
+}
+
 export const Game: Component<GameProps> = (props) => {
   const params = useParams();
   const [opponentLoading, setOpponentLoading] = createSignal(false);
@@ -35,6 +46,10 @@ export const Game: Component<GameProps> = (props) => {
     "The sunblock was handed to the girl before practice, but the burned skin was proof she did not apply it. He swore he just saw his sushi move. The opportunity of a lifetime passed before him as he tried to decide between a cone or a cup. Nobody questions who built the pyramids in Mexico. Excitement replaced fear until the final moment.",
   );
   const [textSplited, setTextSplited] = createSignal<TextSplited[]>([]);
+  const [invalidInput, setInvalidInput] = createSignal<InvalidInput>({
+    index: 0,
+    invalid: false
+  });
 
   let websocket: WebSocket | null = null;
 
@@ -83,16 +98,33 @@ export const Game: Component<GameProps> = (props) => {
     }
   });
 
-  const sendWebsocketMessage = (buff: string) => {
-    if (websocket) {
-      websocket.send(buff);
-    }
-  };
+  // const sendWebsocketMessage = (buff: string) => {
+  //   if (websocket) {
+  //     websocket.send(buff);
+  //   }
+  // };
 
   // Each 3 seconds send the player current text state to the server
   // setTimeout(() => {
   //   sendWebsocketMessage(playerBuff());
   // }, 3000);
+
+  const replaceText = (text: string, type: TextInputType) => {
+    const textSplitedValue = textSplited();
+    textSplitedValue[currentIndex()].final = text;
+
+    setTextSplited(textSplitedValue);
+
+    buildFullText();
+
+    if (type === TextInputType.wrong) {
+      const invalid = {
+        invalid: true,
+        index: currentIndex(),
+      };
+      setInvalidInput(invalid);
+    }
+  };
 
   const buildFullText = () => {
     let fullText: string = "";
@@ -108,6 +140,10 @@ export const Game: Component<GameProps> = (props) => {
   };
 
   const playerInput = (playerText: string, key: string) => {
+    console.log(key);
+    if (key === "CapsLock") {
+      return;
+    }
     if (!firstInput()) {
       if (key === "Backspace") {
         const textSplitedValue = textSplited();
@@ -131,22 +167,34 @@ export const Game: Component<GameProps> = (props) => {
     const gameTextChar = textSplited()[currentIndex()];
     const playerTextChar = playerText[currentIndex()];
 
+    if (invalidInput().invalid && invalidInput().index === currentIndex()) {
+      if (playerTextChar === textSplited()[invalidInput().index].default) {
+        console.log("invalidUpdate");
+        const invalid = {
+          invalid: false,
+          index: 0,
+        };
+        setInvalidInput(invalid);
+      }
+    }
+
+    if (invalidInput().invalid) {
+      const spanText = `<span class="invalid">${gameTextChar.default}</span>`;
+      replaceText(spanText, TextInputType.invalid);
+
+      return;
+    }
+
     if (gameTextChar.default !== playerTextChar) {
       const spanText = `<span class="wrong">${gameTextChar.default}</span>`;
-      const textSplitedValue = textSplited();
-      textSplitedValue[currentIndex()].final = spanText;
-
-      setTextSplited(textSplitedValue);
-
-      buildFullText();
+      replaceText(spanText, TextInputType.wrong);
 
       return;
     }
 
     const spanText = `<span class="right">${gameTextChar.default}</span>`;
-    textSplited()[currentIndex()].final = spanText;
+    replaceText(spanText, TextInputType.right);
 
-    buildFullText();
     return;
   };
 
@@ -158,7 +206,13 @@ export const Game: Component<GameProps> = (props) => {
             <strong class="player-name">{props.gameData().player.name}</strong>
             <div class="game-text" innerHTML={playerTextState()}></div>
             <div class="game-text-input-wrapper">
-              <input onKeyUp={(evt) => playerInput(evt.target.value, evt.key)} />
+              <Input
+                placeholder="Start typing..."
+                name="player"
+                disabled={inputPlayerDisabled()}
+                onChange={() => {}}
+                onKeyUp={(evt) => playerInput(evt.target.value, evt.key)}
+              />
             </div>
           </div>
           <Show when={opponentLoading()}>
@@ -178,6 +232,7 @@ export const Game: Component<GameProps> = (props) => {
                   placeholder="Start typing..."
                   name="player"
                   onChange={() => {}}
+                  onKeyUp={() => {}}
                   disabled={true}
                 />
               </div>

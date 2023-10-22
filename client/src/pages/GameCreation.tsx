@@ -56,10 +56,10 @@ export const GameCreation: Component<GameCreationProps> = (props) => {
           </div>
           <form class="form" onSubmit={(event) => onFormSubmit(event)}>
             <div class="form-input-wrapper">
-              <Input name="name" placeholder="Game name" onChange={() => {}} disabled={false} />
+              <Input name="name" placeholder="Game name" onChange={() => {}} onKeyUp={() => {}} disabled={false} />
             </div>
             <div class="form-input-wrapper">
-              <Input name="player" placeholder="Your nickname" onChange={() => {}} disabled={false} />
+              <Input name="player" placeholder="Your nickname" onChange={() => {}} onKeyUp={() => {}} disabled={false} />
             </div>
 
             <div class="form-input-button-wrapper">

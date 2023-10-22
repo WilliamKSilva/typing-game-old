@@ -72,3 +72,8 @@
   background-color: green;
   color: white;
 }
+
+.invalid {
+  background-color: darkRed;
+  color: white;
+}
