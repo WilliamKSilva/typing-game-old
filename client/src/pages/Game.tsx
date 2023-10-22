@@ -6,7 +6,7 @@ import {
   Show,
   createEffect,
   createSignal,
-  onMount
+  onMount,
 } from "solid-js";
 import { Input } from "../components/Input";
 import { Loading } from "../components/Loading";
@@ -19,15 +19,22 @@ type GameProps = {
   setGameData: Setter<GameData>;
 };
 
+type TextSplited = {
+  default: string;
+  final: string;
+};
+
 export const Game: Component<GameProps> = (props) => {
   const params = useParams();
   const [opponentLoading, setOpponentLoading] = createSignal(false);
   const [inputPlayerDisabled, setInputPlayerDisabled] = createSignal(true);
-  const [playerBuff, setPlayerBuff] = createSignal("");
   const [currentIndex, setCurrentIndex] = createSignal(0);
   const [firstInput, setFirstInput] = createSignal(true);
-  const [opponentBuff, setOpponentBuff] = createSignal("");
   const [playerTextState, setPlayerTextState] = createSignal("");
+  const [matchText, setMatchText] = createSignal(
+    "The sunblock was handed to the girl before practice, but the burned skin was proof she did not apply it. He swore he just saw his sushi move. The opportunity of a lifetime passed before him as he tried to decide between a cone or a cup. Nobody questions who built the pyramids in Mexico. Excitement replaced fear until the final moment.",
+  );
+  const [textSplited, setTextSplited] = createSignal<TextSplited[]>([]);
 
   let websocket: WebSocket | null = null;
 
@@ -41,6 +48,17 @@ export const Game: Component<GameProps> = (props) => {
     }/games/join?id=${params.id}&player=${props.gameData().player.name}`;
 
     websocket = new WebSocket(url);
+
+    for (let text of matchText()) {
+      const newTextSplited: TextSplited[] = [
+        ...textSplited(),
+        {
+          default: text,
+          final: "",
+        },
+      ];
+      setTextSplited(newTextSplited);
+    }
   });
 
   createEffect(() => {
@@ -76,42 +94,60 @@ export const Game: Component<GameProps> = (props) => {
   //   sendWebsocketMessage(playerBuff());
   // }, 3000);
 
-  const replaceChar = (text: string, index: number, replaceContent: string) => {
-    return (
-      text.substring(0, index) +
-      replaceContent +
-      text.substring(index + replaceContent.length)
-    );
+  const buildFullText = () => {
+    let fullText: string = "";
+    for (let text of textSplited()) {
+      if (text.final) {
+        fullText = fullText + text.final;
+      } else {
+        fullText = fullText + text.default;
+      }
+    }
+
+    setPlayerTextState(fullText);
   };
 
-  const playerInput = (playerText: string) => {
-    console.log("playerState", playerText)
+  const playerInput = (playerText: string, key: string) => {
     if (!firstInput()) {
+      if (key === "Backspace") {
+        const textSplitedValue = textSplited();
+        textSplitedValue[currentIndex()].final =
+          textSplited()[currentIndex()].default;
+
+        setTextSplited(textSplitedValue);
+
+        buildFullText();
+
+        setCurrentIndex(currentIndex() - 1);
+
+        return;
+      }
+
       setCurrentIndex(currentIndex() + 1);
     } else {
-      setFirstInput(false)
+      setFirstInput(false);
     }
 
-    const gameTextChar = props.gameData().match_text[currentIndex()];
-    const playerTextChar = playerText[currentIndex()]
+    const gameTextChar = textSplited()[currentIndex()];
+    const playerTextChar = playerText[currentIndex()];
 
+    if (gameTextChar.default !== playerTextChar) {
+      const spanText = `<span class="wrong">${gameTextChar.default}</span>`;
+      const textSplitedValue = textSplited();
+      textSplitedValue[currentIndex()].final = spanText;
 
-    console.log("gameText", gameTextChar)
-    console.log("playerText", playerTextChar)
+      setTextSplited(textSplitedValue);
 
-    if (
-      gameTextChar !== playerTextChar 
-    ) {
-      let newPlayerStateText = playerTextState();
+      buildFullText();
 
-      const updatedPlayerStateText = replaceChar(
-        newPlayerStateText,
-        currentIndex(),
-        `<span class="wrong">${playerTextChar}</span>`,
-      );
-
-      setPlayerTextState(updatedPlayerStateText)
+      return;
     }
+
+    const spanText = `<span class="right">${gameTextChar.default}</span>`;
+    textSplited()[currentIndex()].final = spanText;
+
+    buildFullText();
+    return;
   };
 
   return (
@@ -122,7 +158,7 @@ export const Game: Component<GameProps> = (props) => {
             <strong class="player-name">{props.gameData().player.name}</strong>
             <div class="game-text" innerHTML={playerTextState()}></div>
             <div class="game-text-input-wrapper">
-              <input onKeyUp={(evt) => playerInput(evt.target.value)} /> 
+              <input onKeyUp={(evt) => playerInput(evt.target.value, evt.key)} />
             </div>
           </div>
           <Show when={opponentLoading()}>

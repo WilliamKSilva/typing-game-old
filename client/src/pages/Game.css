@@ -64,5 +64,11 @@
 }
 
 .wrong {
-  color: red;
+  background-color: red;
+  color: white;
+}
+
+.right {
+  background-color: green;
+  color: white;
 }
