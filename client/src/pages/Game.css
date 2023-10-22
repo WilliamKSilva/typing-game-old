@@ -62,3 +62,7 @@
 .game-text-input-wrapper {
   width: 60%;
 }
+
+.wrong {
+  color: red;
+}

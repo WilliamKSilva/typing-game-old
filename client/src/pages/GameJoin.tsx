@@ -62,7 +62,7 @@ export const GameJoin: Component<GameJoinProps> = (props) => {
           </div>
           <form class="form" onSubmit={(event) => joinExistingGame(event)}>
             <div class="form-input-wrapper">
-              <Input name="game_id" placeholder="Game name" onChange={() => {}} disabled={false} />
+              <Input name="game_id" placeholder="Game ID" onChange={() => {}} disabled={false} />
             </div>
             <div class="form-input-wrapper">
               <Input
