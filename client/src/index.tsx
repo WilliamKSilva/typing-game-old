@@ -9,6 +9,7 @@ import "./index.css";
 import { Game } from "./pages/Game";
 import { GameCreation } from "./pages/GameCreation";
 import { GameJoin } from "./pages/GameJoin";
+import { Teste } from "./pages/Teste";
 import { GameData } from "./types/game_data";
 
 const root = document.getElementById("root");
@@ -21,6 +22,7 @@ if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
 
 const [gameData, setGameData] = createSignal<GameData>({
   id: '',
+  match_text: '',
   player: {
     name: '',
     buff: ''
@@ -40,6 +42,7 @@ render(
           <Route path="/game" element={<GameCreation setGameData={setGameData} />} />
           <Route path="/game-join" element={<GameJoin setGameData={setGameData} />} />
           <Route path="/game/:id" element={<Game gameData={gameData} setGameData={setGameData} />} />
+          <Route path="/teste" element={<Teste />} />
         </Routes>
       </GameContext.Provider>
     </Router>
