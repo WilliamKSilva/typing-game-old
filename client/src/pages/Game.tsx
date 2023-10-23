@@ -140,25 +140,13 @@ export const Game: Component<GameProps> = (props) => {
   };
 
   const playerInput = (playerText: string, key: string) => {
-    console.log(key);
     if (key === "CapsLock") {
       return;
     }
+    if (key === "Backspace") {
+      return;
+    }
     if (!firstInput()) {
-      if (key === "Backspace") {
-        const textSplitedValue = textSplited();
-        textSplitedValue[currentIndex()].final =
-          textSplited()[currentIndex()].default;
-
-        setTextSplited(textSplitedValue);
-
-        buildFullText();
-
-        setCurrentIndex(currentIndex() - 1);
-
-        return;
-      }
-
       setCurrentIndex(currentIndex() + 1);
     } else {
       setFirstInput(false);
@@ -169,7 +157,6 @@ export const Game: Component<GameProps> = (props) => {
 
     if (invalidInput().invalid && invalidInput().index === currentIndex()) {
       if (playerTextChar === textSplited()[invalidInput().index].default) {
-        console.log("invalidUpdate");
         const invalid = {
           invalid: false,
           index: 0,
@@ -198,6 +185,26 @@ export const Game: Component<GameProps> = (props) => {
     return;
   };
 
+  const playerInputDeletion = (currentInput: string, key: string) => {
+    if (!firstInput()) {
+      if (key === "Backspace") {
+        const index = currentInput.length - 1 
+        setCurrentIndex(index)
+        const textSplitedValue = textSplited();
+        textSplitedValue[currentIndex()].final =
+          textSplited()[currentIndex()].default;
+
+        setTextSplited(textSplitedValue);
+
+        buildFullText();
+
+        console.log(currentIndex())
+
+        return;
+      }
+    }
+  };
+
   return (
     <div class="game-wrapper">
       <div class="game-content">
@@ -210,8 +217,8 @@ export const Game: Component<GameProps> = (props) => {
                 placeholder="Start typing..."
                 name="player"
                 disabled={inputPlayerDisabled()}
-                onChange={() => {}}
                 onKeyUp={(evt) => playerInput(evt.target.value, evt.key)}
+                onKeyDown={(evt) => playerInputDeletion(evt.target.value, evt.key)}
               />
             </div>
           </div>
@@ -231,8 +238,6 @@ export const Game: Component<GameProps> = (props) => {
                 <Input
                   placeholder="Start typing..."
                   name="player"
-                  onChange={() => {}}
-                  onKeyUp={() => {}}
                   disabled={true}
                 />
               </div>
