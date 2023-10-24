@@ -9,3 +9,7 @@ export type GameData = {
   player: Player
   opponent: Player 
 }
+
+export type OpponentTextState = {
+  opponent_buff: string
+}

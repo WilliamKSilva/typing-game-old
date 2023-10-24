@@ -56,9 +56,7 @@ export default class Games {
   }
 
   public update_player_socket(player: Player, socket: WebSocket) {
-    if (!player.socket) {
-      player.socket = socket;
-    }
+    player.socket = socket;
   }
 
   public find_by_id(id: string): Game | null {

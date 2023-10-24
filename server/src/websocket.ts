@@ -1,3 +1,4 @@
+import console from "console";
 import { IncomingMessage } from "http";
 import internal from "stream";
 import { Server, WebSocketServer } from "ws";
@@ -20,10 +21,12 @@ export default class Websocket {
 
   private handleClientConnection() {
     this.server.on("connection", (socket, req) => {
+      console.log("connection")
       let full_url = `http://127.0.0.1:3333${req.url}`;
       const url = new URL(full_url);
       const game_id = url.searchParams.get("id");
       const player_name = url.searchParams.get("player");
+      console.log(game_id, player_name)
       socket.on("error", console.error);
 
       if (!game_id) {
@@ -61,15 +64,12 @@ export default class Websocket {
         return;
       }
 
-      // If is the player first connection saves his socket 
+      // Always save the player socket connections
+      // so we can keep track of the state on the client
       this.games.update_player_socket(player, socket)
-
 
       // If game_state returns an value the game has the two players connected
       const [player_state, opponent_state] = this.games.game_state(game, player, opponent)
-
-      console.log("player_state", player_state)
-      console.log("opponent_state", opponent_state)
 
       // If game is ready send the state to the two players 
       if (player_state && opponent_state) {
@@ -81,12 +81,10 @@ export default class Websocket {
         let buff = "";
         buff += data;
 
-        console.log(buff)
-
         player.buff = buff 
 
         const state = {
-          opponent: opponent.buff,
+          opponent_buff: opponent.buff,
         };
 
         socket.send(Buffer.from(JSON.stringify(state)));
