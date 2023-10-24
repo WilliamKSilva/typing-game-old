@@ -25,9 +25,9 @@ type TextSplited = {
 };
 
 type InvalidInput = {
-  invalid: boolean
-  index: number
-}
+  invalid: boolean;
+  index: number;
+};
 
 enum TextInputType {
   wrong = "wrong",
@@ -35,6 +35,7 @@ enum TextInputType {
   invalid = "invalid",
 }
 
+// TODO: find a way of optimize/reduce all this signals
 export const Game: Component<GameProps> = (props) => {
   const params = useParams();
   const [opponentLoading, setOpponentLoading] = createSignal(false);
@@ -48,7 +49,7 @@ export const Game: Component<GameProps> = (props) => {
   const [textSplited, setTextSplited] = createSignal<TextSplited[]>([]);
   const [invalidInput, setInvalidInput] = createSignal<InvalidInput>({
     index: 0,
-    invalid: false
+    invalid: false,
   });
 
   let websocket: WebSocket | null = null;
@@ -188,8 +189,8 @@ export const Game: Component<GameProps> = (props) => {
   const playerInputDeletion = (currentInput: string, key: string) => {
     if (!firstInput()) {
       if (key === "Backspace") {
-        const index = currentInput.length - 1 
-        setCurrentIndex(index)
+        const index = currentInput.length - 1;
+        setCurrentIndex(index);
         const textSplitedValue = textSplited();
         textSplitedValue[currentIndex()].final =
           textSplited()[currentIndex()].default;
@@ -198,7 +199,7 @@ export const Game: Component<GameProps> = (props) => {
 
         buildFullText();
 
-        console.log(currentIndex())
+        setCurrentIndex(index - 1)
 
         return;
       }
@@ -218,7 +219,9 @@ export const Game: Component<GameProps> = (props) => {
                 name="player"
                 disabled={inputPlayerDisabled()}
                 onKeyUp={(evt) => playerInput(evt.target.value, evt.key)}
-                onKeyDown={(evt) => playerInputDeletion(evt.target.value, evt.key)}
+                onKeyDown={(evt) =>
+                  playerInputDeletion(evt.target.value, evt.key)
+                }
               />
             </div>
           </div>
