@@ -1,4 +1,4 @@
-import { useParams } from "@solidjs/router";
+import { useParams, useSearchParams } from "@solidjs/router";
 import {
   Accessor,
   Component,
@@ -51,6 +51,7 @@ export const Game: Component<GameProps> = (props) => {
     index: 0,
     invalid: false,
   });
+  const [searchParams, setSearchParams] = useSearchParams();
 
   let websocket: WebSocket | null = null;
 
@@ -61,25 +62,21 @@ export const Game: Component<GameProps> = (props) => {
 
     const url = `${
       import.meta.env.VITE_APP_WEBSOCKET_SERVER_URL
-    }/games/join?id=${params.id}&player=${props.gameData().player.name}`;
+    }/games/join?id=${params.id}&player=${searchParams.player}`;
 
     websocket = new WebSocket(url);
 
-    for (let text of matchText()) {
-      const newTextSplited: TextSplited[] = [
-        ...textSplited(),
-        {
-          default: text,
-          final: "",
-        },
-      ];
-      setTextSplited(newTextSplited);
-    }
+    console.log(url);
+    console.log(websocket);
+
+    buildMatchText();
   });
 
   createEffect(() => {
     if (websocket) {
+      console.log("websocket")
       websocket.onmessage = (event) => {
+        console.log(event)
         readBlob(event.data, (result) => {
           if (result) {
             const data = JSON.parse(result as string);
@@ -109,6 +106,19 @@ export const Game: Component<GameProps> = (props) => {
   // setTimeout(() => {
   //   sendWebsocketMessage(playerBuff());
   // }, 3000);
+
+  const buildMatchText = () => {
+    for (let text of matchText()) {
+      const newTextSplited: TextSplited[] = [
+        ...textSplited(),
+        {
+          default: text,
+          final: "",
+        },
+      ];
+      setTextSplited(newTextSplited);
+    }
+  };
 
   const replaceText = (text: string, type: TextInputType) => {
     const textSplitedValue = textSplited();
@@ -199,7 +209,7 @@ export const Game: Component<GameProps> = (props) => {
 
         buildFullText();
 
-        setCurrentIndex(index - 1)
+        setCurrentIndex(index - 1);
 
         return;
       }

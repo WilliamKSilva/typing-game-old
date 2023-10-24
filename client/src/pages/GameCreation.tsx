@@ -37,7 +37,7 @@ export const GameCreation: Component<GameCreationProps> = (props) => {
 
       setLoading(false);
 
-      navigate(`/game/${responseData.id}`);
+      navigate(`/game/${responseData.id}&player=${data.get("player")}`);
     } catch (error) {
       console.log(error);
       setLoading(false);

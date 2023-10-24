@@ -36,14 +36,13 @@ export const GameJoin: Component<GameJoinProps> = (props) => {
 
       const responseData = response.data as GameData;
 
-      console.log(responseData);
       setLoading(false);
 
       if (responseData.id) {
         responseData.player.name = nickname as string;
 
         props.setGameData(responseData);
-        navigate(`/game/${responseData.id}`);
+        navigate(`/game/${responseData.id}?player=${nickname}`);
       }
     } catch (error) {
       console.log(error);
