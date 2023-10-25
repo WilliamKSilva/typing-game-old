@@ -6,7 +6,7 @@ import { default as Games } from "./games";
 
 export type SocketEvent = {
   type: string;
-  data: Record<string, unknown>;
+  data?: Record<string, unknown>;
 };
 
 export type ReadyEvent = {
@@ -84,9 +84,8 @@ export default class Websocket {
         opponent,
       );
 
-      // If game is ready send the state to the two players
+      // If game is full send the state to the two players
       if (player_state && opponent_state) {
-        console.log("teste")
         opponent.socket?.send(Buffer.from(JSON.stringify(opponent_state)));
         player.socket?.send(Buffer.from(JSON.stringify(player_state)));
       }
@@ -97,8 +96,8 @@ export default class Websocket {
 
         const event = JSON.parse(buff) as SocketEvent;
 
+        // TODO: break this events in separated functions
         if (event.type === "ready") {
-          console.log("Ready")
           const eventData = event.data as ReadyEvent;
           const [player, opponent] = this.games.find_player_and_opponent(
             player_name,
@@ -133,19 +132,6 @@ export default class Websocket {
 
           return;
         }
-
-        // let buff = "";
-        // buff += data;
-
-        // player.buff = buff
-
-        // const state = {
-        //   opponent_buff: opponent.buff,
-        // };
-
-        // socket.send(Buffer.from(JSON.stringify(state)));
-
-        // return;
       });
     });
   }
