@@ -25,11 +25,13 @@ const [gameData, setGameData] = createSignal<GameData>({
   match_text: '',
   player: {
     name: '',
-    buff: ''
+    buff: '',
+    ready: false,
   },
   opponent: {
     name: '',
-    buff: ''
+    buff: '',
+    ready: false,
   }
 })
 

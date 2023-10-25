@@ -39,6 +39,22 @@
   height: fit-content;
 }
 
+.player-ready {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.player-ready-text {
+  color: green;
+}
+
+.player-not-ready-text {
+  color: red;
+}
+
 .loading-player {
   display: flex;
   flex-direction: row;

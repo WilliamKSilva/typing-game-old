@@ -52,6 +52,7 @@ export const Game: Component<GameProps> = (props) => {
     invalid: false,
   });
   const [searchParams, setSearchParams] = useSearchParams();
+  const [renderPlayerCondition, setRenderPlayerCondition] = createSignal(false)
 
   let websocket: WebSocket | null = null;
 
@@ -66,17 +67,12 @@ export const Game: Component<GameProps> = (props) => {
 
     websocket = new WebSocket(url);
 
-    console.log(url);
-    console.log(websocket);
-
     buildMatchText();
   });
 
   createEffect(() => {
     if (websocket) {
-      console.log("websocket")
       websocket.onmessage = (event) => {
-        console.log(event)
         readBlob(event.data, (result) => {
           if (result) {
             const data = JSON.parse(result as string);
@@ -90,17 +86,29 @@ export const Game: Component<GameProps> = (props) => {
             if (data.match_text) {
               setPlayerTextState(props.gameData().match_text);
             }
+
+            if (data.player.name && data.opponent.name) {
+              setRenderPlayerCondition(true)
+            }
+
+            console.log(data.player)
           }
         });
       };
     }
   });
 
-  // const sendWebsocketMessage = (buff: string) => {
-  //   if (websocket) {
-  //     websocket.send(buff);
-  //   }
-  // };
+  const sendPlayerReadyEvent = (ready: boolean) => {
+    if (websocket) {
+      const eventData = {
+        type: "ready",
+        data: {
+          ready,
+        },
+      };
+      websocket.send(JSON.stringify(eventData));
+    }
+  };
 
   // Each 3 seconds send the player current text state to the server
   // setTimeout(() => {
@@ -221,6 +229,19 @@ export const Game: Component<GameProps> = (props) => {
       <div class="game-content">
         <div class="players-area">
           <div class="player">
+            <Show when={renderPlayerCondition()}>
+              {props.gameData().player.ready ? (
+                <div class="player-ready">
+                  <strong class="player-ready-text">Ready</strong>
+                  <button onClick={() => sendPlayerReadyEvent(false)}>Not ready</button>
+                </div>
+              ) : (
+                <div class="player-ready">
+                  <strong class="player-not-ready-text">Not ready</strong>
+                  <button onClick={() => sendPlayerReadyEvent(true)}>Ready</button>
+                </div>
+              )}
+            </Show>
             <strong class="player-name">{props.gameData().player.name}</strong>
             <div class="game-text" innerHTML={playerTextState()}></div>
             <div class="game-text-input-wrapper">
@@ -243,6 +264,17 @@ export const Game: Component<GameProps> = (props) => {
           </Show>
           <Show when={opponentLoading() === false}>
             <div class="player">
+              <Show when={renderPlayerCondition()}>
+              {props.gameData().opponent.ready ? (
+                <div class="player-ready">
+                  <strong class="player-ready-text">Ready</strong>
+                </div>
+              ) : (
+                <div class="player-ready">
+                  <strong class="player-not-ready-text">Not ready</strong>
+                </div>
+              )}
+              </Show>
               <strong class="player-name">
                 {props.gameData().opponent.name}
               </strong>
