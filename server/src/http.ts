@@ -73,6 +73,7 @@ export default class Http {
 
           game.player_two = {
             name: data.player,
+            ready: false,
             buff: "",
             socket: null
           } 

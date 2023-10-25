@@ -5,6 +5,7 @@ import { TextGeneratorContract } from "./services/random_text";
 export type Player = {
   name: string;
   buff: string;
+  ready: boolean;
   socket: WebSocket | null;
 };
 
@@ -25,6 +26,7 @@ export type GameState = {
 
 export default class Games {
   constructor(private textGenerator: TextGeneratorContract) {}
+  // TODO: add specific game, player and opponent for each connected socket as an property
   public running: Game[] = [];
 
   public create(name: string, player: string) {
@@ -36,11 +38,13 @@ export default class Games {
         name: player,
         buff: "",
         socket: null,
+        ready: false,
       },
       player_two: {
         name: "",
         buff: "",
         socket: null,
+        ready: false,
       },
     };
 
@@ -94,10 +98,12 @@ export default class Games {
         player: {
           name: player.name,
           buff: player.buff,
+          ready: player.ready,
         },
         opponent: {
           name: opponent.name,
           buff: opponent.buff,
+          ready: opponent.ready,
         },
       };
 
@@ -107,10 +113,12 @@ export default class Games {
         player: {
           name: opponent.name,
           buff: opponent.buff,
+          ready: opponent.ready 
         },
         opponent: {
           name: player.name,
           buff: player.buff,
+          ready: player.ready 
         },
       };
 
@@ -133,7 +141,12 @@ export default class Games {
     return;
   }
 
-  // public check_game_ready(game: Game, player: Player, opponent: Player, socket: WebSocket) {
+  public communicate_game_state(player: Player, opponent: Player, player_state: GameState | null, opponent_state: GameState | null) {
+    player.socket?.send(Buffer.from(JSON.stringify(player_state)))
+    opponent.socket?.send(Buffer.from(JSON.stringify(opponent_state)))
+  }
+
+  //  public check_game_ready(game: Game, player: Player, opponent: Player, socket: WebSocket) {
   //   const game_state = this.game_state(game, player, opponent)
   //   if (opponent?.name !== "" && !game?.ready) {
   //     game.ready = true;
