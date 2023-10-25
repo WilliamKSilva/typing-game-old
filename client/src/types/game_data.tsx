@@ -1,6 +1,7 @@
 type Player = {
   name: string
   buff: string
+  ready: boolean
 }
 
 export type GameData = {
