@@ -2,6 +2,12 @@ import { v4 as uuid } from "uuid";
 import WebSocket from "ws";
 import { TextGeneratorContract } from "./services/random_text";
 
+export enum GameStatus {
+  awaiting = "awaiting",
+  started = "started",
+  finished = "finished"
+}
+
 export type Player = {
   name: string;
   buff: string;
@@ -13,6 +19,7 @@ type Game = {
   id: string;
   name: string;
   match_text: string;
+  status: GameStatus;
   player_one: Player;
   player_two: Player;
 };
@@ -20,6 +27,7 @@ type Game = {
 export type GameState = {
   id: string
   match_text: string
+  status: GameStatus
   player: Omit<Player, "socket"> 
   opponent: Omit<Player, "socket"> 
 }
@@ -34,6 +42,7 @@ export default class Games {
       id: uuid(),
       name,
       match_text: this.textGenerator.random(),
+      status: GameStatus.awaiting,
       player_one: {
         name: player,
         buff: "",
@@ -95,6 +104,7 @@ export default class Games {
       const player_state: GameState = {
         id: game.id,
         match_text: game.match_text,
+        status: game.status,
         player: {
           name: player.name,
           buff: player.buff,
@@ -110,6 +120,7 @@ export default class Games {
       const opponent_state: GameState = {
         id: game.id,
         match_text: game.match_text,
+        status: game.status,
         player: {
           name: opponent.name,
           buff: opponent.buff,

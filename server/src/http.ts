@@ -80,6 +80,7 @@ export default class Http {
 
           const game_data: GameState = {
             id: game.id,
+            status: game.status, 
             match_text: game.match_text,
             player: game.player_one,
             opponent: game.player_one

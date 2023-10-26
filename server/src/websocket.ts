@@ -2,7 +2,7 @@ import console from "console";
 import { IncomingMessage } from "http";
 import internal from "stream";
 import { Server, WebSocketServer } from "ws";
-import { default as Games } from "./games";
+import { GameStatus, default as Games } from "./games";
 
 export type SocketEvent = {
   type: string;
@@ -28,7 +28,7 @@ export default class Websocket {
     this.handleClientConnection();
   }
 
-  // TODO: Move connected socket handling from the connection method (ex: message event) 
+  // TODO: Move connected socket handling from the connection method (ex: message event)
   private handleClientConnection() {
     this.server.on("connection", (socket, req) => {
       console.log("connection");
@@ -108,7 +108,7 @@ export default class Websocket {
             socket.terminate();
             return;
           }
-    
+
           if (!opponent) {
             socket.terminate();
             return;
@@ -129,6 +129,19 @@ export default class Websocket {
             player_state,
             opponent_state,
           );
+
+          if (player.ready && opponent.ready) {
+            // TODO: the game status updated is not being sent to the client
+            // TODO: change all the state update logic to follow the SocketEvent type format
+            game.status = GameStatus.started
+
+            const event: SocketEvent = {
+              type: "ready",
+            };
+
+            player.socket?.send(Buffer.from(JSON.stringify(event)));
+            opponent.socket?.send(Buffer.from(JSON.stringify(event)));
+          }
 
           return;
         }
