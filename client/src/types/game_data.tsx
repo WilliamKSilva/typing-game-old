@@ -4,8 +4,15 @@ type Player = {
   ready: boolean
 }
 
+export enum GameStatus {
+  awaiting = "awaiting",
+  started = "started",
+  finished = "finished"
+}
+
 export type GameData = {
   id: string
+  status?: GameStatus
   match_text: string
   player: Player
   opponent: Player 

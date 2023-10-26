@@ -10,7 +10,7 @@ import {
 } from "solid-js";
 import { Input } from "../components/Input";
 import { Loading } from "../components/Loading";
-import { GameData } from "../types/game_data";
+import { GameData, GameStatus } from "../types/game_data";
 import { readBlob } from "../utils/readBlob";
 import "./Game.css";
 
@@ -35,6 +35,12 @@ enum TextInputType {
   invalid = "invalid",
 }
 
+type StartGameState = {
+  started: boolean;
+  startMessage: boolean;
+  countDownFinished: boolean;
+};
+
 // TODO: find a way of optimize/reduce all this signals
 export const Game: Component<GameProps> = (props) => {
   const params = useParams();
@@ -52,7 +58,14 @@ export const Game: Component<GameProps> = (props) => {
     invalid: false,
   });
   const [searchParams, setSearchParams] = useSearchParams();
-  const [renderPlayerCondition, setRenderPlayerCondition] = createSignal(false)
+  const [renderPlayerCondition, setRenderPlayerCondition] = createSignal(false);
+  const [startGame, setStartGame] = createSignal<StartGameState>({
+    started: false,
+    startMessage: false,
+    countDownFinished: false,
+  });
+  const [gameStarted, setGameStarted] = createSignal(true);
+  const [timer, setTimer] = createSignal(10);
 
   let websocket: WebSocket | null = null;
 
@@ -77,10 +90,22 @@ export const Game: Component<GameProps> = (props) => {
           if (result) {
             const data = JSON.parse(result as string);
 
+            if (data.type === "ready") {
+              const startGameState: StartGameState = {
+                started: true,
+                startMessage: false,
+                countDownFinished: false,
+              };
+
+              setStartGame(startGameState);
+              setRenderPlayerCondition(false);
+
+              return;
+            }
+
             if (data.opponent.name) {
               setOpponentLoading(false);
               props.setGameData(data);
-              setInputPlayerDisabled(false);
             }
 
             if (data.match_text) {
@@ -88,10 +113,8 @@ export const Game: Component<GameProps> = (props) => {
             }
 
             if (data.player.name && data.opponent.name) {
-              setRenderPlayerCondition(true)
+              setRenderPlayerCondition(true);
             }
-
-            console.log(data.player)
           }
         });
       };
@@ -224,70 +247,131 @@ export const Game: Component<GameProps> = (props) => {
     }
   };
 
+  createEffect(() => {
+    if (timer() === 0) {
+      const startGameState: StartGameState = {
+        started: true,
+        startMessage: true,
+        countDownFinished: true,
+      };
+
+      setStartGame(startGameState);
+
+      setInputPlayerDisabled(false);
+
+      setTimeout(() => {
+        const startGameState: StartGameState = {
+          started: true,
+          startMessage: false,
+          countDownFinished: true,
+        };
+
+        setStartGame(startGameState);
+      }, 3000);
+
+      return;
+    }
+
+    if (startGame().started && timer() > 0) {
+      setTimeout(() => {
+        setTimer(timer() - 1);
+      }, 1000);
+    }
+  }, 1);
+
+  const renderCounter = () => {
+    if (startGame().countDownFinished && startGame().startMessage) {
+      return <strong>Go!</strong>;
+    }
+
+    if (startGame().countDownFinished && !startGame().startMessage) {
+      return;
+    }
+
+    return (
+      <strong>{timer()}</strong>
+    )
+  };
+
   return (
     <div class="game-wrapper">
       <div class="game-content">
         <div class="players-area">
-          <div class="player">
-            <Show when={renderPlayerCondition()}>
-              {props.gameData().player.ready ? (
-                <div class="player-ready">
-                  <strong class="player-ready-text">Ready</strong>
-                  <button onClick={() => sendPlayerReadyEvent(false)}>Not ready</button>
-                </div>
-              ) : (
-                <div class="player-ready">
-                  <strong class="player-not-ready-text">Not ready</strong>
-                  <button onClick={() => sendPlayerReadyEvent(true)}>Ready</button>
-                </div>
-              )}
-            </Show>
-            <strong class="player-name">{props.gameData().player.name}</strong>
-            <div class="game-text" innerHTML={playerTextState()}></div>
-            <div class="game-text-input-wrapper">
-              <Input
-                placeholder="Start typing..."
-                name="player"
-                disabled={inputPlayerDisabled()}
-                onKeyUp={(evt) => playerInput(evt.target.value, evt.key)}
-                onKeyDown={(evt) =>
-                  playerInputDeletion(evt.target.value, evt.key)
-                }
-              />
-            </div>
-          </div>
-          <Show when={opponentLoading()}>
-            <div class="loading-player">
-              <p class="loading-player-text">Waiting player connect...</p>
-              <Loading />
+          <Show when={startGame().started}>
+            <div class="game-timer">
+              {renderCounter()} 
             </div>
           </Show>
-          <Show when={opponentLoading() === false}>
+          <div class="wrapper-players">
             <div class="player">
               <Show when={renderPlayerCondition()}>
-              {props.gameData().opponent.ready ? (
-                <div class="player-ready">
-                  <strong class="player-ready-text">Ready</strong>
-                </div>
-              ) : (
-                <div class="player-ready">
-                  <strong class="player-not-ready-text">Not ready</strong>
-                </div>
-              )}
+                {props.gameData().player.ready &&
+                props.gameData().status !== GameStatus.started ? (
+                  <div class="player-ready">
+                    <strong class="player-ready-text">Ready</strong>
+                    <button onClick={() => sendPlayerReadyEvent(false)}>
+                      Not ready
+                    </button>
+                  </div>
+                ) : (
+                  <div class="player-ready">
+                    <strong class="player-not-ready-text">Not ready</strong>
+                    <button onClick={() => sendPlayerReadyEvent(true)}>
+                      Ready
+                    </button>
+                  </div>
+                )}
               </Show>
               <strong class="player-name">
-                {props.gameData().opponent.name}
+                {props.gameData().player.name}
               </strong>
-              <strong class="game-text">{props.gameData().match_text}</strong>
+              <div class="game-text" innerHTML={playerTextState()}></div>
               <div class="game-text-input-wrapper">
                 <Input
                   placeholder="Start typing..."
                   name="player"
-                  disabled={true}
+                  disabled={inputPlayerDisabled()}
+                  onKeyUp={(evt) => playerInput(evt.target.value, evt.key)}
+                  onKeyDown={(evt) =>
+                    playerInputDeletion(evt.target.value, evt.key)
+                  }
                 />
               </div>
             </div>
-          </Show>
+            <Show when={opponentLoading()}>
+              <div class="loading-player">
+                <p class="loading-player-text">Waiting player connect...</p>
+                <Loading />
+              </div>
+            </Show>
+            <Show when={opponentLoading() === false}>
+              <div class="player">
+                <Show when={renderPlayerCondition()}>
+                  {props.gameData().opponent.ready &&
+                  props.gameData().status !== GameStatus.started ? (
+                    <div class="player-ready">
+                      <strong class="player-ready-text">Ready</strong>
+                    </div>
+                  ) : (
+                    <div class="player-ready">
+                      <strong class="player-not-ready-text">Not ready</strong>
+                    </div>
+                  )}
+                </Show>
+                <strong class="player-name">
+                  {props.gameData().opponent.name}
+                </strong>
+                <strong class="game-text">{props.gameData().match_text}</strong>
+                <div class="game-text-input-wrapper">
+                  <Input
+                    placeholder="Start typing..."
+                    name="player"
+                    disabled={true}
+                  />
+                </div>
+              </div>
+            </Show>
+          </div>
         </div>
       </div>
     </div>

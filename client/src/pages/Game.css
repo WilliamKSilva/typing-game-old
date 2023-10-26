@@ -24,18 +24,35 @@
 .players-area {
   display: flex;
   width: 100%;
+  align-items: center;
+  flex-direction: column;
+}
+
+.game-timer {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
+  align-items: center;
+  font-size: 2rem;
+  color: white;
+}
+
+.wrapper-players {
+  display: flex;
+  gap: 1rem;
   flex-direction: row;
   align-items: center;
 }
 
 .player {
   display: flex;
-  margin-top: 7rem;
+  margin-top: 5rem;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   width: 50%;
-  gap: 7rem;
+  gap: 2rem;
   height: fit-content;
 }
 
@@ -73,6 +90,7 @@
 .game-text {
   font-size: 1.4rem;
   color: #FFFFFF;
+  width: 70%;
 }
 
 .game-text-input-wrapper {
