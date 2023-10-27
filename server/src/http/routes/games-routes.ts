@@ -7,6 +7,7 @@ export const newGameRouter = (gameInstances: GameInstances) => {
   const gameController = new GameController(gameInstances)
 
   gamesRouter.post("/", gameController.create)
+  gamesRouter.patch("/new-game/:gameId", gameController.newPlayer)
 
   return gamesRouter
 }

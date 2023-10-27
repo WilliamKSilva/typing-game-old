@@ -3,9 +3,15 @@ import Game from "./game";
 export default class GameInstances {
   constructor(public running: Game[] = []) {}
 
-  public async new(game: Game) {
-    this.running.push(game)
+  public new(game: Game) {
+    this.running.push(game);
 
-    return this.running
+    return this.running;
+  }
+
+  public find(gameId: string) {
+    const game = this.running.find((game) => game.id === gameId);
+
+    return game;
   }
 }
