@@ -1,7 +1,7 @@
 import Game from "./game";
 
 export default class GameInstances {
-  constructor(public running: Game[] = []) {}
+  public running: Game[] = []
 
   public new(game: Game) {
     this.running.push(game);

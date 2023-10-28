@@ -7,48 +7,55 @@ import { CreateGameData, UpdateGameData } from "../types/game-controller-types";
 export default class GameController {
   constructor(private gameInstances: GameInstances) {}
 
-  public async create(req: Request, res: Response) {
-    const createGameData = req.body as CreateGameData;
+  public create(req: Request, res: Response) {
+    try {
+      const createGameData = req.body as CreateGameData;
 
-    const playerOne = new Player({
-      name: createGameData.playerName
-    })
+      const playerOne = new Player({
+        name: createGameData.playerName,
+      });
 
-    const game = new Game({
-      name: createGameData.gameName,
-      matchText: "",
-      playerOne
-    }) 
+      const game = new Game({
+        name: createGameData.gameName,
+        matchText: "",
+        playerOne,
+      });
 
-    this.gameInstances.new(game)
+      this.gameInstances.new(game);
 
-    res.status(200).send({
-      game
-    })
+      res.status(200).send({
+        game,
+      });
+    } catch (error) {
+      console.log(error);
+      res.status(500).send({
+        message: "Internal server error",
+      });
+    }
   }
 
-  public async newPlayer(req: Request, res: Response) {
-    const { gameId } = req.params
-    const updateGameData = req.body as UpdateGameData 
+  public newPlayer(req: Request, res: Response) {
+    const { gameId } = req.params;
+    const updateGameData = req.body as UpdateGameData;
 
-    const game = this.gameInstances.find(gameId)
+    const game = this.gameInstances.find(gameId);
 
     if (!game) {
       res.status(400).send({
-        message: "Game not found"
-      })
+        message: "Game not found",
+      });
 
-      return
+      return;
     }
 
     const player = new Player({
-      name: updateGameData.playerName
-    })
+      name: updateGameData.playerName,
+    });
 
-    game.playerTwo = player 
+    game.playerTwo = player;
 
     res.status(200).send({
-      message: "Game updated"
-    })
+      message: "Game updated",
+    });
   }
 }
