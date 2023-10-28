@@ -23,9 +23,9 @@ export default class GameController {
 
       this.gameInstances.new(game);
 
-      res.status(200).send({
-        game,
-      });
+      const gameState = game.getGameState(playerOne) 
+
+      res.status(200).send(gameState);
     } catch (error) {
       console.log(error);
       res.status(500).send({
