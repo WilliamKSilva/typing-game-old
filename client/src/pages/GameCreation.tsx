@@ -21,15 +21,15 @@ export const GameCreation: Component<GameCreationProps> = (props) => {
     event.preventDefault();
     const data = new FormData(event.target);
 
-    const url = `${import.meta.env.VITE_APP_HTTP_SERVER_URL}/games/new`;
+    const url = `${import.meta.env.VITE_APP_HTTP_SERVER_URL}/games`;
     const newGameData = {
-      name: data.get("name"),
-      player: data.get("player"),
+      gameName: data.get("name"),
+      playerName: data.get("player"),
     };
 
     try {
       setLoading(true);
-      const response = await axios.post(url, JSON.stringify(newGameData));
+      const response = await axios.post(url, newGameData);
 
       const responseData = response.data as GameData;
 

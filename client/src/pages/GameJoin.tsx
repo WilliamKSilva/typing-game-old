@@ -22,16 +22,15 @@ export const GameJoin: Component<GameJoinProps> = (props) => {
     const game_id = data.get("game_id");
     const nickname = data.get("player");
 
-    const url = `${import.meta.env.VITE_APP_HTTP_SERVER_URL}/games/update`;
+    const url = `${import.meta.env.VITE_APP_HTTP_SERVER_URL}/games/${game_id}`;
 
     try {
       setLoading(true);
-      const response = await axios.post(
+      const response = await axios.patch(
         url,
-        JSON.stringify({
-          game_id,
-          player: nickname,
-        }),
+        {
+          playerName: nickname
+        }
       );
 
       const responseData = response.data as GameData;
