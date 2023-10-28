@@ -3,11 +3,11 @@ import GameInstances from "../../games/instances";
 import GameController from "../controllers/game-controller";
 
 export const newGameRouter = (gameInstances: GameInstances) => {
-  const gamesRouter = Router()
   const gameController = new GameController(gameInstances)
+  const gamesRouter = Router()
 
-  gamesRouter.post("/", gameController.create)
-  gamesRouter.patch("/new-game/:gameId", gameController.newPlayer)
+  gamesRouter.post("/", (req, res) => gameController.create(req, res))
+  gamesRouter.post("/new-game/:gameId", (req, res) => gameController.newPlayer(req, res))
 
   return gamesRouter
 }
