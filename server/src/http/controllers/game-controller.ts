@@ -11,19 +11,14 @@ export default class GameController {
     try {
       const createGameData = req.body as CreateGameData;
 
-      const playerOne = new Player({
-        name: createGameData.playerName,
-      });
-
       const game = new Game({
         name: createGameData.gameName,
         matchText: "",
-        playerOne,
       });
 
       this.gameInstances.new(game);
 
-      const gameState = game.getGameState(playerOne) 
+      const gameState = game.getGameState() 
 
       res.status(200).send(gameState);
     } catch (error) {

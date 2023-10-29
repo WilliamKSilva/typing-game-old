@@ -1,5 +1,5 @@
 import { v4 as uuid } from "uuid";
-import { Player } from "../games";
+import Player from "./player";
 
 export enum GameStatus {
   awaiting = "awaiting",
@@ -10,44 +10,65 @@ export enum GameStatus {
 type NewGameData = {
   name: string;
   matchText: string;
-  playerOne: Player;
 };
 
-type GameState = {
+export type GameState = {
   id: string;
+  status: GameStatus;
   matchText: string;
   player: Player | null;
   opponent: Player | null;
 };
 
 export default class Game {
-  constructor({ name, matchText, playerOne }: NewGameData) {
+  constructor({ name, matchText }: NewGameData) {
     this.id = uuid();
     this.name = name;
     this.matchText = matchText;
-    this.playerOne = playerOne;
-    this.playerTwo = null;
-    this.gameStatus = GameStatus.awaiting;
+    this.status = GameStatus.awaiting;
   }
 
   public id: string;
+  public status: GameStatus;
   public name: string;
   public matchText: string;
-  public gameStatus: GameStatus;
-  public playerOne: Player | null;
-  public playerTwo?: Player | null;
+  public playerOne?: Player;
+  public playerTwo?: Player;
 
-  public getGameState(connectedPlayer: Player): GameState {
+  public newPlayer(player: Player) {
     if (!this.playerOne) {
+      this.playerOne = player;
+
+      return this.playerOne;
+    }
+
+    this.playerTwo = player;
+
+    return this.playerTwo;
+  }
+
+  public getGameState(playerName?: string): GameState {
+    if (!playerName) {
       return {
         id: this.id,
+        status: this.status,
         matchText: this.matchText,
         player: null,
         opponent: null,
       };
     }
 
-    if (this.playerOne.name === connectedPlayer.name) {
+    if (!this.playerOne) {
+      return {
+        id: this.id,
+        status: this.status,
+        matchText: this.matchText,
+        player: null,
+        opponent: null,
+      };
+    }
+
+    if (this.playerOne.name === playerName) {
       const player: Player = {
         name: this.playerOne.name,
         buff: this.playerOne.buff,
@@ -58,6 +79,7 @@ export default class Game {
       if (!this.playerTwo) {
         return {
           id: this.id,
+          status: this.status,
           matchText: this.matchText,
           player,
           opponent: null,
@@ -73,6 +95,7 @@ export default class Game {
 
       return {
         id: this.id,
+        status: this.status,
         matchText: this.matchText,
         player,
         opponent,
@@ -82,10 +105,11 @@ export default class Game {
     if (!this.playerTwo) {
       return {
         id: this.id,
+        status: this.status,
         matchText: this.matchText,
         player: null,
-        opponent: this.playerOne
-      }
+        opponent: this.playerOne,
+      };
     }
 
     const player: Player = {
@@ -104,6 +128,7 @@ export default class Game {
 
     return {
       id: this.id,
+      status: this.status,
       matchText: this.matchText,
       player,
       opponent,
