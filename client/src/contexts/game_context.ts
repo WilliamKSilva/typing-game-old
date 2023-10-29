@@ -1,5 +1,5 @@
 import { createContext } from "solid-js";
-import { GameData } from "../types/game_data";
+import { GameData } from "../types/game-data";
 
 const GameContext = createContext([{id: '', player: ''}, (data: GameData) => {}])
 

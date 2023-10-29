@@ -10,7 +10,7 @@ import { Game } from "./pages/Game";
 import { GameCreation } from "./pages/GameCreation";
 import { GameJoin } from "./pages/GameJoin";
 import { Teste } from "./pages/Teste";
-import { GameData } from "./types/game_data";
+import { GameState, GameStatus } from "./types/game-data";
 
 const root = document.getElementById("root");
 
@@ -20,9 +20,10 @@ if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
   );
 }
 
-const [gameData, setGameData] = createSignal<GameData>({
+const [gameData, setGameData] = createSignal<GameState>({
   id: '',
-  match_text: '',
+  status: GameStatus.awaiting,
+  matchText: '',
   player: {
     name: '',
     buff: '',

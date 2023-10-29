@@ -10,13 +10,20 @@ import {
 } from "solid-js";
 import { Input } from "../components/Input";
 import { Loading } from "../components/Loading";
-import { GameData, GameStatus } from "../types/game_data";
+import { GameState, GameStatus } from "../types/game-data";
+import {
+  Events,
+  GenericSocketEvent,
+  JoinEvent,
+  SocketEvent,
+  StateEvent,
+} from "../types/websocket";
 import { readBlob } from "../utils/readBlob";
 import "./Game.css";
 
 type GameProps = {
-  gameData: Accessor<GameData>;
-  setGameData: Setter<GameData>;
+  gameData: Accessor<GameState>;
+  setGameData: Setter<GameState>;
 };
 
 type TextSplited = {
@@ -44,6 +51,8 @@ type StartGameState = {
 // TODO: find a way of optimize/reduce all this signals
 export const Game: Component<GameProps> = (props) => {
   const params = useParams();
+  const [searchParams] = useSearchParams();
+
   const [opponentLoading, setOpponentLoading] = createSignal(false);
   const [inputPlayerDisabled, setInputPlayerDisabled] = createSignal(true);
   const [currentIndex, setCurrentIndex] = createSignal(0);
@@ -57,7 +66,6 @@ export const Game: Component<GameProps> = (props) => {
     index: 0,
     invalid: false,
   });
-  const [searchParams, setSearchParams] = useSearchParams();
   const [renderPlayerCondition, setRenderPlayerCondition] = createSignal(false);
   const [startGame, setStartGame] = createSignal<StartGameState>({
     started: false,
@@ -70,15 +78,29 @@ export const Game: Component<GameProps> = (props) => {
   let websocket: WebSocket | null = null;
 
   onMount(() => {
-    if (props.gameData().opponent.name === "") {
-      setOpponentLoading(true);
-    }
+    const gameId = params.id;
+    const playerName = searchParams.player;
 
     const url = `${
       import.meta.env.VITE_APP_WEBSOCKET_SERVER_URL
-    }/games/join?id=${params.id}&player=${searchParams.player}`;
+    }/games/connect?id=${gameId}&player=${searchParams.player}`;
 
     websocket = new WebSocket(url);
+
+    const joinEvent: SocketEvent<JoinEvent> = {
+      type: Events.join,
+      data: {
+        playerName,
+      },
+    };
+
+    if (!websocket) {
+      return;
+    }
+
+    websocket.addEventListener("open", () => {
+      websocket?.send(JSON.stringify(joinEvent));
+    });
 
     buildMatchText();
   });
@@ -88,33 +110,49 @@ export const Game: Component<GameProps> = (props) => {
       websocket.onmessage = (event) => {
         readBlob(event.data, (result) => {
           if (result) {
-            const data = JSON.parse(result as string);
+            console.log(JSON.parse(result as string))
+            const data = JSON.parse(result as string) as GenericSocketEvent;
 
-            if (data.type === "ready") {
-              const startGameState: StartGameState = {
-                started: true,
-                startMessage: false,
-                countDownFinished: false,
-              };
+            switch (data.type) {
+              case Events.state:
+                const joinEvent = JSON.parse(
+                  result as string,
+                ) as SocketEvent<StateEvent>;
 
-              setStartGame(startGameState);
-              setRenderPlayerCondition(false);
+                console.log(joinEvent);
 
-              return;
+                props.setGameData(joinEvent.data);
+
+                console.log(props.gameData());
+
+                break;
             }
 
-            if (data.opponent.name) {
-              setOpponentLoading(false);
-              props.setGameData(data);
-            }
+            // if (data.type === "ready") {
+            //   const startGameState: StartGameState = {
+            //     started: true,
+            //     startMessage: false,
+            //     countDownFinished: false,
+            //   };
 
-            if (data.match_text) {
-              setPlayerTextState(props.gameData().match_text);
-            }
+            //   setStartGame(startGameState);
+            //   setRenderPlayerCondition(false);
 
-            if (data.player.name && data.opponent.name) {
-              setRenderPlayerCondition(true);
-            }
+            //   return;
+            // }
+
+            // if (data.opponent.name) {
+            //   setOpponentLoading(false);
+            //   props.setGameData(data);
+            // }
+
+            // if (data.match_text) {
+            //   setPlayerTextState(props.gameData().match_text);
+            // }
+
+            // if (data.player.name && data.opponent.name) {
+            //   setRenderPlayerCondition(true);
+            // }
           }
         });
       };
@@ -288,9 +326,7 @@ export const Game: Component<GameProps> = (props) => {
       return;
     }
 
-    return (
-      <strong>{timer()}</strong>
-    )
+    return <strong>{timer()}</strong>;
   };
 
   return (
@@ -298,14 +334,12 @@ export const Game: Component<GameProps> = (props) => {
       <div class="game-content">
         <div class="players-area">
           <Show when={startGame().started}>
-            <div class="game-timer">
-              {renderCounter()} 
-            </div>
+            <div class="game-timer">{renderCounter()}</div>
           </Show>
           <div class="wrapper-players">
             <div class="player">
               <Show when={renderPlayerCondition()}>
-                {props.gameData().player.ready &&
+                {props.gameData().player?.ready &&
                 props.gameData().status !== GameStatus.started ? (
                   <div class="player-ready">
                     <strong class="player-ready-text">Ready</strong>
@@ -323,7 +357,7 @@ export const Game: Component<GameProps> = (props) => {
                 )}
               </Show>
               <strong class="player-name">
-                {props.gameData().player.name}
+                {props.gameData().player?.name}
               </strong>
               <div class="game-text" innerHTML={playerTextState()}></div>
               <div class="game-text-input-wrapper">
@@ -347,7 +381,7 @@ export const Game: Component<GameProps> = (props) => {
             <Show when={opponentLoading() === false}>
               <div class="player">
                 <Show when={renderPlayerCondition()}>
-                  {props.gameData().opponent.ready &&
+                  {props.gameData().opponent?.ready &&
                   props.gameData().status !== GameStatus.started ? (
                     <div class="player-ready">
                       <strong class="player-ready-text">Ready</strong>
@@ -359,9 +393,9 @@ export const Game: Component<GameProps> = (props) => {
                   )}
                 </Show>
                 <strong class="player-name">
-                  {props.gameData().opponent.name}
+                  {props.gameData().opponent?.name}
                 </strong>
-                <strong class="game-text">{props.gameData().match_text}</strong>
+                <strong class="game-text">{props.gameData().matchText}</strong>
                 <div class="game-text-input-wrapper">
                   <Input
                     placeholder="Start typing..."

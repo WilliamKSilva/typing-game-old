@@ -6,10 +6,10 @@ import "./GameCreation.css";
 
 import { useNavigate } from "@solidjs/router";
 import { FaSolidArrowLeft } from "solid-icons/fa";
-import { GameData } from "../types/game_data";
+import { GameState } from "../types/game-data";
 
 type GameCreationProps = {
-  setGameData: Setter<GameData>;
+  setGameData: Setter<GameState>;
 };
 
 export const GameCreation: Component<GameCreationProps> = (props) => {
@@ -31,13 +31,13 @@ export const GameCreation: Component<GameCreationProps> = (props) => {
       setLoading(true);
       const response = await axios.post(url, newGameData);
 
-      const responseData = response.data as GameData;
+      const responseData = response.data as GameState;
 
       props.setGameData(responseData);
 
       setLoading(false);
 
-      navigate(`/game/${responseData.id}&player=${data.get("player")}`);
+      navigate(`/game/${responseData.id}?player=${data.get("player")}`);
     } catch (error) {
       console.log(error);
       setLoading(false);
