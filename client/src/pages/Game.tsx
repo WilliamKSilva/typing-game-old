@@ -110,7 +110,6 @@ export const Game: Component<GameProps> = (props) => {
       websocket.onmessage = (event) => {
         readBlob(event.data, (result) => {
           if (result) {
-            console.log(JSON.parse(result as string))
             const data = JSON.parse(result as string) as GenericSocketEvent;
 
             switch (data.type) {
@@ -119,11 +118,11 @@ export const Game: Component<GameProps> = (props) => {
                   result as string,
                 ) as SocketEvent<StateEvent>;
 
-                console.log(joinEvent);
-
                 props.setGameData(joinEvent.data);
 
-                console.log(props.gameData());
+                if (!props.gameData().opponent) {
+                  setOpponentLoading(true)
+                }
 
                 break;
             }
