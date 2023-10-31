@@ -2,6 +2,7 @@ import cors from "cors";
 import express, { json } from "express";
 import { parse } from "url";
 import GameInstances from "./games/instances";
+import TextGenerator from "./games/text-generator";
 import { newRouter } from "./http/routes";
 import WebsocketServer from "./websocket/server";
 
@@ -9,11 +10,12 @@ import WebsocketServer from "./websocket/server";
 // I want to know how much data this shitty array can hold before starts lagging
 // the whole thing
 const gameInstances = new GameInstances()
+const textGenerator = new TextGenerator()
 
 const app = express()
 app.use(cors())
 app.use(json())
-app.use(newRouter(gameInstances))
+app.use(newRouter(gameInstances, textGenerator))
 
 const httpServer = app.listen("3333", () => {
   console.log("Server listening at port 3333!") 

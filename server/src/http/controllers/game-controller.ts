@@ -20,7 +20,7 @@ export default class GameController {
 
       this.gameInstances.new(game);
 
-      const gameState = game.getGameState() 
+      const gameState = game.getGameState(null) 
 
       res.status(200).send(gameState);
     } catch (error) {
