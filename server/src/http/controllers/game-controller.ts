@@ -1,19 +1,21 @@
 import { Request, Response } from "express";
 import Game from "../../games/game";
 import GameInstances from "../../games/instances";
-import Player from "../../games/player";
-import { CreateGameData, UpdateGameData } from "../types/game-controller-types";
+import { TextGeneratorContract } from "../../games/text-generator";
+import { CreateGameData } from "../types/game-controller-types";
 
 export default class GameController {
-  constructor(private gameInstances: GameInstances) {}
+  constructor(private gameInstances: GameInstances, private textGenerator: TextGeneratorContract) {}
 
   public create(req: Request, res: Response) {
     try {
       const createGameData = req.body as CreateGameData;
 
+      const matchText = this.textGenerator.random()
+
       const game = new Game({
         name: createGameData.gameName,
-        matchText: "",
+        matchText,
       });
 
       this.gameInstances.new(game);
@@ -27,30 +29,5 @@ export default class GameController {
         message: "Internal server error",
       });
     }
-  }
-
-  public newPlayer(req: Request, res: Response) {
-    const { gameId } = req.params;
-    const updateGameData = req.body as UpdateGameData;
-
-    const game = this.gameInstances.find(gameId);
-
-    if (!game) {
-      res.status(400).send({
-        message: "Game not found",
-      });
-
-      return;
-    }
-
-    const player = new Player({
-      name: updateGameData.playerName,
-    });
-
-    game.playerTwo = player;
-
-    res.status(200).send({
-      message: "Game updated",
-    });
   }
 }
