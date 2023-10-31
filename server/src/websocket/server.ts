@@ -4,6 +4,7 @@ import { Server, WebSocket, WebSocketServer } from "ws";
 import Game from "../games/game";
 import GameInstances from "../games/instances";
 import Player from "../games/player";
+import { sendErrorEvent } from "./events";
 import { ErrorEvent, Events, JoinEvent, StateEvent } from "./types";
 
 export type GenericSocketEvent = {
@@ -84,8 +85,8 @@ export default class WebsocketServer {
     });
   }
 
-  public listeningToEvents(socket: WebSocket, game: Game, url: string) {
-    socket.on("message", (buff) => {
+  public listeningToEvents(playerSocket: WebSocket, game: Game, url: string) {
+    playerSocket.on("message", (buff) => {
       let data = "";
       data += buff;
 
@@ -96,20 +97,32 @@ export default class WebsocketServer {
           console.log("Event received: Join")
           const socketEvent = JSON.parse(data) as SocketEvent<JoinEvent>;
 
-          const player = new Player({ name: socketEvent.data.playerName });
+          const player = new Player({ name: socketEvent.data.playerName, socket: playerSocket });
 
           game.newPlayer(player);
 
-          const gameState = game.getGameState(player.name);
+          const gameState = game.getGameState(socketEvent.data.playerName) 
+
+          const gameStateData = game.getGameStateData(player.name);
+
+          if (!gameStateData) {
+            sendErrorEvent(playerSocket, "Error trying to get Game state")
+
+            break;
+          }
 
           const socketEventState: SocketEvent<StateEvent> = {
             type: Events.state,
             data: {
-              ...gameState,
-            },
+              ...gameStateData
+            }
           };
 
-          socket.send(Buffer.from(JSON.stringify(socketEventState)));
+          playerSocket.send(Buffer.from(JSON.stringify(socketEventState)));
+
+          if (gameState.opponent) {
+            gameState.opponent.socket?.send(Buffer.from(JSON.stringify(socketEventState)))
+          } 
 
           break;
       }

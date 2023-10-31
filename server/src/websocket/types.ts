@@ -1,4 +1,4 @@
-import Game, { GameState } from "../games/game";
+import Game, { GameStateData } from "../games/game";
 import Player from "../games/player";
 
 export enum Events {
@@ -12,7 +12,7 @@ export type ReadyEvent = {
   ready: boolean;
 };
 
-export type StateEvent = GameState 
+export type StateEvent = GameStateData 
 
 export type JoinEvent = {
   playerName: string

@@ -20,6 +20,14 @@ export type GameState = {
   opponent: Player | null;
 };
 
+export type GameStateData = {
+  id: string;
+  status: GameStatus;
+  matchText: string;
+  player?: Omit<Player, "socket">;
+  opponent?: Omit<Player, "socket">;
+};
+
 export default class Game {
   constructor({ name, matchText }: NewGameData) {
     this.id = uuid();
@@ -47,16 +55,21 @@ export default class Game {
     return this.playerTwo;
   }
 
-  public getGameState(playerName?: string): GameState {
-    if (!playerName) {
+  public getGameState(connectedPlayer: string | null): GameState {
+    console.log("Game State Start!")
+
+    if (!connectedPlayer) {
       return {
         id: this.id,
         status: this.status,
         matchText: this.matchText,
         player: null,
-        opponent: null,
-      };
+        opponent: null
+      }
     }
+
+    console.log("playerOne", this.playerOne)
+    console.log("playerTwo", this.playerTwo)
 
     if (!this.playerOne) {
       return {
@@ -68,13 +81,10 @@ export default class Game {
       };
     }
 
-    if (this.playerOne.name === playerName) {
-      const player: Player = {
-        name: this.playerOne.name,
-        buff: this.playerOne.buff,
-        ready: this.playerOne.ready,
-        socket: this.playerOne.socket,
-      };
+    const connectedPlayerIsPlayerOne = this.playerOne.name === connectedPlayer;
+
+    if (connectedPlayerIsPlayerOne) {
+      const player: Player = this.playerOne;
 
       if (!this.playerTwo) {
         return {
@@ -86,12 +96,7 @@ export default class Game {
         };
       }
 
-      const opponent: Player = {
-        name: this.playerTwo.name,
-        buff: this.playerTwo.buff,
-        ready: this.playerTwo.ready,
-        socket: this.playerTwo.socket,
-      };
+      const opponent: Player = this.playerTwo;
 
       return {
         id: this.id,
@@ -112,19 +117,9 @@ export default class Game {
       };
     }
 
-    const player: Player = {
-      name: this.playerTwo.name,
-      buff: this.playerTwo.buff,
-      ready: this.playerTwo.ready,
-      socket: this.playerTwo.socket,
-    };
+    const player: Player = this.playerTwo;
 
-    const opponent: Player = {
-      name: this.playerOne.name,
-      buff: this.playerOne.buff,
-      ready: this.playerOne.ready,
-      socket: this.playerOne.socket,
-    };
+    const opponent: Player = this.playerOne;
 
     return {
       id: this.id,
@@ -133,5 +128,50 @@ export default class Game {
       player,
       opponent,
     };
+  }
+
+  public getGameStateData(connectedPlayerName: string): GameStateData | undefined {
+    const { player, opponent, ...gameState } =
+      this.getGameState(connectedPlayerName);
+
+    if (!player && opponent) {
+      return {
+        ...gameState,
+        opponent: {
+          name: opponent.name,
+          buff: opponent.buff,
+          ready: opponent.ready,
+        },
+      };
+    }
+
+    if (player && !opponent) {
+      return {
+        ...gameState,
+        player: {
+          name: player.name,
+          buff: player.buff,
+          ready: player.ready,
+        },
+      };
+    }
+
+    // Typescript can't see that all validations for nullability
+    // has already being made, so this is necessary
+    if (player && opponent) {
+      return {
+        ...gameState,
+        player: {
+          name: player.name,
+          buff: player.buff,
+          ready: player.ready,
+        },
+        opponent: {
+          name: opponent.name,
+          buff: opponent.buff,
+          ready: opponent.ready,
+        },
+      };
+    }
   }
 }
